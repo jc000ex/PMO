@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>登录 - 国科项目管理仪表板</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --primary: #2563eb;
+    --primary-600: #1d4ed8;
+    --primary-light: #eff6ff;
+    --green: #0d9488;
+    --red: #ef4444;
+    --bg: #f0f4f8;
+    --surface: #ffffff;
+    --border: #e2e8f0;
+    --text: #0f172a;
+    --text-700: #334155;
+    --text-500: #64748b;
+    --radius: 10px;
+    --radius-lg: 14px;
+    --shadow-lg: 0 12px 24px rgba(0,0,0,.08), 0 4px 8px rgba(0,0,0,.04);
+    --transition: .25s;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: var(--bg);
+    background-image: url("data:image/svg+xml,%3Csvg width='20' height='20' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='10' cy='10' r='0.8' fill='%2364748b' opacity='0.06'/%3E%3C/svg%3E");
+    display: flex; align-items: center; justify-content: center;
+    min-height: 100vh; padding: 20px;
+  }
+
+  .login-card {
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    padding: 48px 40px 36px;
+    width: 420px;
+    max-width: 100%;
+  }
+
+  .login-header { text-align: center; margin-bottom: 36px; }
+  .login-header h1 { font-size: 24px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+  .login-header .sub { font-size: 14px; color: var(--text-500); }
+  .login-logo { font-size: 36px; margin-bottom: 12px; }
+
+  .form-group { margin-bottom: 22px; }
+  .form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--text-700); margin-bottom: 6px; }
+  .form-group input {
+    width: 100%; height: 44px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0 14px;
+    font-size: 15px;
+    color: var(--text);
+    background: #fafbfc;
+    transition: var(--transition);
+    outline: none;
+  }
+  .form-group input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(37,99,235,.1);
+    background: #fff;
+  }
+
+  .captcha-row { display: flex; gap: 12px; align-items: flex-end; }
+  .captcha-row .form-group { flex: 1; margin-bottom: 0; }
+  .captcha-box {
+    width: 110px; height: 44px;
+    background: var(--primary-light);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; font-weight: 700; color: var(--primary);
+    letter-spacing: 2px; user-select: none; cursor: pointer;
+    flex-shrink: 0; flex-direction: column;
+  }
+  .captcha-box .captcha-hint { font-size: 10px; font-weight: 400; color: var(--text-500); letter-spacing: 0; }
+  .captcha-box:hover { border-color: var(--primary); }
+
+  .btn-login {
+    width: 100%; height: 46px;
+    background: var(--primary);
+    color: #fff;
+    border: none; border-radius: var(--radius);
+    font-size: 16px; font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    margin-top: 8px;
+  }
+  .btn-login:hover { background: var(--primary-600); }
+  .btn-login:active { transform: scale(.98); }
+
+  .login-error {
+    text-align: center; color: var(--red); font-size: 13px;
+    margin-top: 16px; min-height: 20px; opacity: 0; transition: opacity .2s;
+  }
+  .login-error.show { opacity: 1; }
+
+  .login-footer { text-align: center; margin-top: 24px; font-size: 12px; color: var(--text-500); }
+</style>
+</head>
+<body>
+
+<div class="login-card">
+  <div class="login-header">
+    <div class="login-logo">&#9992;</div>
+    <h1>国科项目管理仪表板</h1>
+    <div class="sub">低空无人机 · 项目管理平台</div>
+  </div>
+
+  <form id="loginForm" autocomplete="off">
+    <div class="form-group">
+      <label>账户名</label>
+      <input type="text" id="username" placeholder="请输入账户名" autocomplete="off">
+    </div>
+    <div class="form-group">
+      <label>密码</label>
+      <input type="password" id="password" placeholder="请输入密码" autocomplete="new-password">
+    </div>
+    <div class="captcha-row">
+      <div class="form-group">
+        <label>验证码</label>
+        <input type="text" id="captchaInput" placeholder="请输入结果" maxlength="4" autocomplete="off">
+      </div>
+      <div class="captcha-box" id="captchaBox" title="点击刷新验证码">
+        <span id="captchaQuestion">3 + 4 = ?</span>
+        <span class="captcha-hint">点击刷新</span>
+      </div>
+    </div>
+
+    <button type="submit" class="btn-login">登 录</button>
+  </form>
+
+  <div class="login-error" id="loginError"></div>
+  <div class="login-footer">国科低空 · 内部管理系统</div>
+</div>
+
+<script>
+(function() {
+  var AUTH_KEY = 'pmo_auth';
+  var CRED = { u: 'admin', p: 'pmo2026' };
+
+  if (sessionStorage.getItem(AUTH_KEY) === '1') {
+    window.location.replace('index.html');
+  }
+
+  var captchaA = 0, captchaB = 0;
+  function refreshCaptcha() {
+    captchaA = Math.floor(Math.random() * 15) + 1;
+    captchaB = Math.floor(Math.random() * 15) + 1;
+    var op = Math.random() > 0.5 ? '+' : '-';
+    if (op === '-' && captchaA < captchaB) { var t = captchaA; captchaA = captchaB; captchaB = t; }
+    document.getElementById('captchaQuestion').textContent = captchaA + ' ' + op + ' ' + captchaB + ' = ?';
+    document.getElementById('captchaInput').value = '';
+  }
+
+  document.getElementById('captchaBox').addEventListener('click', refreshCaptcha);
+  refreshCaptcha();
+
+  document.getElementById('loginForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    var u = document.getElementById('username').value.trim();
+    var p = document.getElementById('password').value;
+    var answer = parseInt(document.getElementById('captchaInput').value.trim(), 10);
+    var correct = captchaA + (captchaB > 0 && document.getElementById('captchaQuestion').textContent.indexOf('-') > -1 ? -captchaB : captchaB);
+    var expected = document.getElementById('captchaQuestion').textContent.indexOf('-') > -1 ? captchaA - captchaB : captchaA + captchaB;
+
+    var errEl = document.getElementById('loginError');
+    if (!u) { showErr('请输入账户名'); return; }
+    if (!p) { showErr('请输入密码'); return; }
+    if (isNaN(answer)) { showErr('请输入验证码结果'); return; }
+    if (answer !== expected) { showErr('验证码错误，请重试'); refreshCaptcha(); return; }
+    if (u !== CRED.u || p !== CRED.p) { showErr('账户名或密码错误'); refreshCaptcha(); return; }
+
+    sessionStorage.setItem(AUTH_KEY, '1');
+    window.location.replace('index.html');
+  });
+
+  function showErr(msg) {
+    var el = document.getElementById('loginError');
+    el.textContent = msg;
+    el.classList.add('show');
+    setTimeout(function() { el.classList.remove('show'); }, 2500);
+  }
+})();
+</script>
+</body>
+</html>

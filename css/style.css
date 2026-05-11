@@ -208,6 +208,20 @@ body {
 }
 .btn-export:hover { background: var(--green); color: #fff; }
 
+.btn-logout {
+  padding: 6px 14px;
+  border: 1px solid var(--red);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--red);
+  font-size: 13px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all var(--transition-fast);
+  margin-left: 2px;
+}
+.btn-logout:hover { background: var(--red); color: #fff; }
+
 /* ===== 统计栏 ===== */
 .stats-strip {
   max-width: 1400px;

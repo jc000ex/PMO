@@ -41,6 +41,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (currentDetailIdx >= 0) openEdit(currentDetailIdx);
   });
   document.getElementById('btnExport').addEventListener('click', exportData);
+  document.getElementById('btnLogout').addEventListener('click', () => {
+    sessionStorage.removeItem('pmo_auth');
+    window.location.replace('login.html');
+  });
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') { closeDetail(); closeEdit(); }
   });
