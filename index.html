@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>国科项目管理仪表板</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- 顶部导航 -->
+<header class="header">
+  <div class="header-left">
+    <h1>✈ 国科项目管理仪表板</h1>
+    <span class="header-subtitle">低空无人机 · 项目总览</span>
+  </div>
+  <div class="header-right">
+    <span class="update-time">数据更新：<em id="updateTime">--</em></span>
+    <button class="theme-toggle" id="themeToggle" title="切换皮肤">
+      <span data-theme-val="report" class="active" title="汇报模式">◉</span>
+      <span data-theme-val="personal" title="自用模式">◎</span>
+    </button>
+    <div class="view-toggle" id="viewToggle">
+      <button class="vt-btn active" data-view="list" title="列表视图">☰ 列表</button>
+      <button class="vt-btn" data-view="card" title="卡片视图">⊞ 卡片</button>
+    </div>
+    <button class="btn-export" id="btnExport" title="导出最新数据">⬇ 导出数据</button>
+  </div>
+</header>
+
+<!-- 统计栏 -->
+<div class="stats-strip">
+  <div class="stats-inner">
+    <div class="ss-item total"><i></i><span>全部 <em id="statTotal">0</em></span></div>
+    <div class="ss-item active"><i></i><span>进行中 <em id="statActive">0</em></span></div>
+    <div class="ss-item done"><i></i><span>已完成 <em id="statDone">0</em></span></div>
+    <div class="ss-item risk"><i></i><span>重点关注 <em id="statRisk">0</em></span></div>
+  </div>
+</div>
+
+<!-- 筛选栏 -->
+<section class="filter-bar">
+  <input type="text" id="searchInput" class="search-box" placeholder="搜索项目名称、编号、客户...">
+  <div class="filter-selects">
+    <div class="fs-item">
+      <label>阶段</label>
+      <select id="filterPhase"><option value="">全部阶段</option></select>
+    </div>
+    <div class="fs-item">
+      <label>状态</label>
+      <select id="filterStatus"><option value="">全部状态</option></select>
+    </div>
+    <div class="fs-item">
+      <label>优先级</label>
+      <select id="filterPriority"><option value="">全部优先级</option></select>
+    </div>
+    <div class="fs-item">
+      <label>负责人</label>
+      <select id="filterPm"><option value="">全部负责人</option></select>
+    </div>
+  </div>
+</section>
+
+<!-- 列表视图 -->
+<section class="list-view" id="listView">
+  <table class="project-table">
+    <thead>
+      <tr>
+        <th class="th-no">#</th>
+        <th>项目名称</th>
+        <th>编号</th>
+        <th>阶段</th>
+        <th>状态</th>
+        <th>优先级</th>
+        <th>客户</th>
+        <th>负责人</th>
+        <th>计划交付</th>
+        <th>操作</th>
+      </tr>
+    </thead>
+    <tbody id="listTbody"></tbody>
+  </table>
+  <div class="empty-state list-empty" style="display:none">没有匹配的项目</div>
+</section>
+
+<!-- 卡片视图 -->
+<section class="project-grid" id="projectGrid" style="display:none">
+  <div class="empty-state">加载中...</div>
+</section>
+
+<!-- 项目详情弹窗 -->
+<div class="modal-overlay" id="modalDetail">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title-row">
+        <h2 id="modalName"></h2>
+        <span class="badge" id="modalId"></span>
+      </div>
+      <div class="modal-header-actions">
+        <button class="btn-edit" id="btnEditDetail">✎ 编辑</button>
+        <button class="modal-close" id="modalClose">&times;</button>
+      </div>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-footer" id="modalFooter"></div>
+  </div>
+</div>
+
+<!-- 编辑项目弹窗 -->
+<div class="modal-overlay" id="modalEdit">
+  <div class="modal modal-edit">
+    <div class="modal-header">
+      <h2>编辑项目信息</h2>
+      <button class="modal-close" id="editClose">&times;</button>
+    </div>
+    <div class="modal-body" id="editBody"></div>
+    <div class="modal-footer">
+      <button class="btn-cancel" id="btnEditCancel">取消</button>
+      <button class="btn-save" id="btnEditSave">保存</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+</body>
+</html>
