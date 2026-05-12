@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('searchInput').addEventListener('input', debounce(renderAll, 200));
 
   // 下拉筛选
-  ['filterPhase', 'filterStatus', 'filterPriority', 'filterPm'].forEach(id => {
+  ['filterPhase', 'filterStatus', 'filterPriority', 'filterPm', 'filterCustomer'].forEach(id => {
     document.getElementById(id).addEventListener('change', renderAll);
   });
 
@@ -115,12 +115,14 @@ function getFilteredProjects() {
   const fs = document.getElementById('filterStatus').value;
   const fpr = document.getElementById('filterPriority').value;
   const fpm = document.getElementById('filterPm').value;
+  const fcu = document.getElementById('filterCustomer').value;
 
   return projects.filter(p => {
     if (fp && p.phase !== fp) return false;
     if (fs && p.status !== fs) return false;
     if (fpr && p.priority !== fpr) return false;
     if (fpm && p.pm !== fpm) return false;
+    if (fcu && p.customer !== fcu) return false;
     if (search) {
       const hay = [p.name, p.id, p.customer, p.pm, p.background].join(' ').toLowerCase();
       if (!hay.includes(search)) return false;
@@ -157,6 +159,7 @@ function updateFilterDropdowns() {
   pris.sort((a, b) => (priOrder[a] ?? 9) - (priOrder[b] ?? 9));
   fillSelect('filterPriority', pris);
   fillSelect('filterPm', [...new Set(projects.map(p => p.pm).filter(Boolean))].sort());
+  fillSelect('filterCustomer', [...new Set(projects.map(p => p.customer).filter(Boolean))].sort());
 }
 
 function fillSelect(id, values) {
