@@ -227,7 +227,7 @@
   },
   {
     "id": "NMG-230",
-    "name": "鄂尔多斯",
+    "name": "鄂尔多斯无人机水利利用项目",
     "phase": "售前",
     "status": "进行中",
     "priority": "低",
@@ -241,7 +241,13 @@
     "businessProgress": "",
     "currentFocus": "",
     "milestones": [],
-    "updates": [],
+    "updates": [
+      {
+        "date": "2026-05-07",
+        "content": "①、上午三方开会，确认四个算法应用，前提是鄂尔多斯移动搞定算力服务器。②、0509发送文件一份，对清楚各个问题。③、目标是实现平台的四个水利算法巡检，并能导入离线视频做识别。",
+        "author": ""
+      }
+    ],
     "background": "1、3月中旬提交招投标文件，暂无进展。\n2、平台正常运行中。",
     "objectives": "",
     "scope": "",
@@ -253,7 +259,7 @@
   },
   {
     "id": "-",
-    "name": "福建长乐",
+    "name": "福建长乐光伏冷却塔AI巡检应用",
     "phase": "售前",
     "status": "进行中",
     "priority": "低",
@@ -267,7 +273,13 @@
     "businessProgress": "",
     "currentFocus": "",
     "milestones": [],
-    "updates": [],
+    "updates": [
+      {
+        "date": "2026-05-06",
+        "content": "客户使用中，今天有演示任务。",
+        "author": ""
+      }
+    ],
     "background": "1、3月底开发完成相关行业模型，并绘制巡检航线做使用。\n2、机库接在共建演示平台（汕头），常态化演示使用中。（last：23日）",
     "objectives": "",
     "scope": "",
@@ -279,7 +291,7 @@
   },
   {
     "id": "-",
-    "name": "呼伦贝尔",
+    "name": "呼伦贝尔共建",
     "phase": "售前",
     "status": "进行中",
     "priority": "低",
@@ -293,7 +305,18 @@
     "businessProgress": "",
     "currentFocus": "",
     "milestones": [],
-    "updates": [],
+    "updates": [
+      {
+        "date": "2026-04-02",
+        "content": "接入无人机场一台，并调试",
+        "author": ""
+      },
+      {
+        "date": "2026-04-20",
+        "content": "更换到汕头演示平台，已通知航宇，航宇尚未通知客户切换到汕头演示平台。",
+        "author": ""
+      }
+    ],
     "background": "1、4月2日接入机场。\n2、4月2日共建演示平台已上线，已通知客户切换机场（尚未答复，尚未接入）。\n【目前机场是离线状态】",
     "objectives": "",
     "scope": "",
