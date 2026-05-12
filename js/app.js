@@ -336,6 +336,7 @@ function openDetail(idx) {
         <div class="col-title">项目动态</div>
         <div class="col-body">
           <div class="add-update-form">
+            <input type="date" id="inputUpdateDate" value="${new Date().toISOString().slice(0,10)}">
             <input type="text" id="inputUpdate" placeholder="输入最新动态，按回车添加...">
             <button class="btn-add" id="btnAddUpdate">添加</button>
           </div>
@@ -366,6 +367,7 @@ function openDetail(idx) {
 
 function addUpdate(idx) {
   const input = document.getElementById('inputUpdate');
+  const dateInput = document.getElementById('inputUpdateDate');
   const content = input.value.trim();
   if (!content) return;
 
@@ -375,13 +377,14 @@ function addUpdate(idx) {
   if (!edits[key]) edits[key] = {};
   if (!edits[key]._localUpdates) edits[key]._localUpdates = [];
 
-  const today = new Date().toISOString().slice(0, 10);
-  edits[key]._localUpdates.push({ date: today, content, author: 'PMO' });
+  const dateVal = dateInput ? dateInput.value : new Date().toISOString().slice(0, 10);
+  const date = dateVal || new Date().toISOString().slice(0, 10);
+  edits[key]._localUpdates.push({ date, content, author: 'PMO' });
   saveLocalEdits(edits);
 
   // 更新内存
   if (!p.updates) p.updates = [];
-  p.updates.push({ date: today, content, author: 'PMO' });
+  p.updates.push({ date, content, author: 'PMO' });
 
   input.value = '';
   // 刷新详情
