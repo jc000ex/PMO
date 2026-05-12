@@ -325,5 +325,37 @@
     "riskPlan": [],
     "changeLog": [],
     "summary": ""
+  },
+  {
+    "id": "-",
+    "name": "中建设规院城市体检算法识别",
+    "phase": "售前",
+    "status": "进行中",
+    "priority": "低",
+    "customer": "中建设规院",
+    "pm": "",
+    "startDate": "",
+    "endDate": "",
+    "actualEndDate": "",
+    "members": "",
+    "businessPhase": false,
+    "businessProgress": "",
+    "currentFocus": "",
+    "milestones": [],
+    "updates": [
+      {
+        "date": "2026-05-12",
+        "content": "已安排开工，工作流程是一找场景、二录制视频并沟通AI所需要的内容、三开发、四录制并输出视频。",
+        "author": ""
+      }
+    ],
+    "background": "",
+    "objectives": "",
+    "scope": "",
+    "acceptanceCriteria": "",
+    "stakeholders": [],
+    "riskPlan": [],
+    "changeLog": [],
+    "summary": ""
   }
 ]
