@@ -13,7 +13,6 @@
     --primary-light: #eff6ff;
     --green: #0d9488;
     --red: #ef4444;
-    --bg: #f0f4f8;
     --surface: #ffffff;
     --border: #e2e8f0;
     --text: #0f172a;
@@ -21,73 +20,108 @@
     --text-500: #64748b;
     --radius: 10px;
     --radius-lg: 14px;
-    --shadow-lg: 0 12px 24px rgba(0,0,0,.08), 0 4px 8px rgba(0,0,0,.04);
-    --transition: .25s;
   }
 
   body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
-    background: #0a0e27;
-    background-image:
-      /* 顶部光晕 */
-      radial-gradient(ellipse 1200px 600px at 50% -20%, rgba(37,99,235,.25), transparent 60%),
-      radial-gradient(ellipse 800px 500px at 80% 80%, rgba(124,58,237,.15), transparent 60%),
-      radial-gradient(ellipse 600px 400px at 20% 40%, rgba(14,165,233,.1), transparent 60%),
-      /* 网格线 */
-      linear-gradient(rgba(37,99,235,.05) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(37,99,235,.05) 1px, transparent 1px);
-    background-size: 100% 100%, 100% 100%, 100% 100%, 40px 40px, 40px 40px;
+    background: #070b1a;
     display: flex; align-items: center; justify-content: center;
-    min-height: 100vh; padding: 20px; position: relative; overflow: hidden;
+    min-height: 100vh; padding: 20px;
+    overflow: hidden;
   }
 
-  /* 浮动光点 */
-  body::before {
-    content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
-    background-image:
-      radial-gradient(2px 2px at 15% 25%, rgba(37,99,235,.6), transparent),
-      radial-gradient(2px 2px at 75% 20%, rgba(124,58,237,.5), transparent),
-      radial-gradient(2px 2px at 30% 70%, rgba(14,165,233,.5), transparent),
-      radial-gradient(2px 2px at 60% 60%, rgba(37,99,235,.5), transparent),
-      radial-gradient(2px 2px at 85% 75%, rgba(124,58,237,.6), transparent),
-      radial-gradient(1.5px 1.5px at 10% 80%, rgba(14,165,233,.4), transparent),
-      radial-gradient(1.5px 1.5px at 50% 10%, rgba(37,99,235,.4), transparent),
-      radial-gradient(1.5px 1.5px at 90% 45%, rgba(124,58,237,.4), transparent),
-      radial-gradient(1.5px 1.5px at 45% 85%, rgba(14,165,233,.5), transparent),
-      radial-gradient(2px 2px at 70% 35%, rgba(37,99,235,.5), transparent);
-    animation: floatParticles 12s ease-in-out infinite alternate;
-  }
-  @keyframes floatParticles {
-    0% { opacity: .6; transform: translateY(0) scale(1); }
-    50% { opacity: 1; transform: translateY(-10px) scale(1.3); }
-    100% { opacity: .7; transform: translateY(6px) scale(.9); }
+  /* 画布粒子网络 */
+  #particleCanvas {
+    position: fixed; inset: 0; z-index: 0;
   }
 
-  /* 六角网格叠加 */
-  body::after {
-    content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
-    background-image: url("data:image/svg+xml,%3Csvg width='60' height='52' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0L60 15v22L30 52 0 37V15z' fill='none' stroke='%2337417a' stroke-width='0.6' opacity='0.3'/%3E%3C/svg%3E");
-    background-size: 60px 52px;
-    opacity: .4;
+  /* 浮动光晕 */
+  .bg-orb {
+    position: fixed; border-radius: 50%; filter: blur(120px);
+    pointer-events: none; z-index: 0;
+  }
+  .bg-orb.orb-1 {
+    width: 600px; height: 600px;
+    background: rgba(37,99,235,.18);
+    top: -200px; left: -150px;
+    animation: orbFloat1 18s ease-in-out infinite;
+  }
+  .bg-orb.orb-2 {
+    width: 500px; height: 500px;
+    background: rgba(124,58,237,.12);
+    bottom: -180px; right: -120px;
+    animation: orbFloat2 22s ease-in-out infinite;
+  }
+  .bg-orb.orb-3 {
+    width: 400px; height: 400px;
+    background: rgba(14,165,233,.1);
+    top: 50%; left: 50%; transform: translate(-50%,-50%);
+    animation: orbFloat3 15s ease-in-out infinite;
+  }
+  @keyframes orbFloat1 {
+    0%,100% { transform: translate(0,0) scale(1); }
+    33% { transform: translate(80px,40px) scale(1.25); }
+    66% { transform: translate(-30px,-20px) scale(.9); }
+  }
+  @keyframes orbFloat2 {
+    0%,100% { transform: translate(0,0) scale(1); }
+    33% { transform: translate(-60px,-30px) scale(1.15); }
+    66% { transform: translate(40px,20px) scale(.85); }
+  }
+  @keyframes orbFloat3 {
+    0%,100% { transform: translate(-50%,-50%) scale(1); }
+    50% { transform: translate(-50%,-50%) scale(1.35); }
   }
 
-  .login-card { position: relative; z-index: 1; }
-
+  /* 登录卡片 */
   .login-card {
-    background: var(--surface);
+    position: relative; z-index: 1;
+    background: rgba(255,255,255,.95);
+    backdrop-filter: blur(20px);
     border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-lg);
     padding: 48px 40px 36px;
-    width: 420px;
-    max-width: 100%;
+    width: 420px; max-width: 100%;
+    box-shadow: 0 0 0 1px rgba(255,255,255,.1),
+                0 20px 60px rgba(0,0,0,.3),
+                0 0 80px rgba(37,99,235,.08);
+    animation: cardIn .6s ease-out;
+  }
+  @keyframes cardIn {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* 光边 */
+  .login-card::before {
+    content: ''; position: absolute; inset: -1px; border-radius: 15px;
+    padding: 1px;
+    background: linear-gradient(135deg, rgba(37,99,235,.4), rgba(124,58,237,.2), rgba(37,99,235,.1), rgba(14,165,233,.3));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+    animation: glowBorder 4s linear infinite;
+    pointer-events: none;
+  }
+  @keyframes glowBorder {
+    0% { background: linear-gradient(135deg, rgba(37,99,235,.4), rgba(124,58,237,.2), rgba(14,165,233,.1), rgba(37,99,235,.3)); }
+    25% { background: linear-gradient(225deg, rgba(14,165,233,.3), rgba(37,99,235,.4), rgba(124,58,237,.2), rgba(37,99,235,.1)); }
+    50% { background: linear-gradient(315deg, rgba(37,99,235,.1), rgba(14,165,233,.3), rgba(37,99,235,.4), rgba(124,58,237,.2)); }
+    75% { background: linear-gradient(45deg, rgba(124,58,237,.2), rgba(37,99,235,.1), rgba(14,165,233,.3), rgba(37,99,235,.4)); }
+    100% { background: linear-gradient(135deg, rgba(37,99,235,.4), rgba(124,58,237,.2), rgba(14,165,233,.1), rgba(37,99,235,.3)); }
   }
 
   .login-header { text-align: center; margin-bottom: 36px; }
-  .login-header h1 { font-size: 24px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
-  .login-header .sub { font-size: 14px; color: var(--text-500); }
-  .login-logo { font-size: 36px; margin-bottom: 12px; }
+  .login-logo {
+    font-size: 42px; margin-bottom: 12px; display: inline-block;
+    animation: logoFloat 3s ease-in-out infinite;
+  }
+  @keyframes logoFloat {
+    0%,100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+  }
+  .login-header h1 { font-size: 22px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+  .login-header .sub { font-size: 13px; color: var(--text-500); }
 
-  .form-group { margin-bottom: 22px; }
+  .form-group { margin-bottom: 20px; }
   .form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--text-700); margin-bottom: 6px; }
   .form-group input {
     width: 100%; height: 44px;
@@ -96,14 +130,15 @@
     padding: 0 14px;
     font-size: 15px;
     color: var(--text);
-    background: #fafbfc;
-    transition: var(--transition);
+    background: #f8fafc;
+    transition: all .25s ease;
     outline: none;
   }
   .form-group input:focus {
     border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(37,99,235,.1);
+    box-shadow: 0 0 0 3px rgba(37,99,235,.08), 0 0 20px rgba(37,99,235,.06);
     background: #fff;
+    transform: translateY(-1px);
   }
 
   .captcha-row { display: flex; gap: 12px; align-items: flex-end; }
@@ -117,33 +152,61 @@
     font-size: 18px; font-weight: 700; color: var(--primary);
     letter-spacing: 2px; user-select: none; cursor: pointer;
     flex-shrink: 0; flex-direction: column;
+    transition: all .25s ease;
   }
+  .captcha-box:hover { border-color: var(--primary); box-shadow: 0 0 12px rgba(37,99,235,.1); }
+  .captcha-box:active { transform: scale(.96); }
   .captcha-box .captcha-hint { font-size: 10px; font-weight: 400; color: var(--text-500); letter-spacing: 0; }
-  .captcha-box:hover { border-color: var(--primary); }
 
   .btn-login {
     width: 100%; height: 46px;
-    background: var(--primary);
+    background: linear-gradient(135deg, var(--primary), #1d4ed8);
     color: #fff;
     border: none; border-radius: var(--radius);
-    font-size: 16px; font-weight: 600;
+    font-size: 16px; font-weight: 600; letter-spacing: 2px;
     cursor: pointer;
-    transition: var(--transition);
+    transition: all .25s ease;
     margin-top: 8px;
+    position: relative; overflow: hidden;
   }
-  .btn-login:hover { background: var(--primary-600); }
-  .btn-login:active { transform: scale(.98); }
+  .btn-login:hover {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    box-shadow: 0 6px 24px rgba(37,99,235,.3);
+    transform: translateY(-2px);
+  }
+  .btn-login:active { transform: scale(.98) translateY(0); }
+
+  /* 按钮波纹 */
+  .ripple {
+    position: absolute; border-radius: 50%;
+    background: rgba(255,255,255,.35);
+    transform: scale(0); animation: rippleEffect .6s ease-out;
+    pointer-events: none;
+  }
+  @keyframes rippleEffect {
+    to { transform: scale(4); opacity: 0; }
+  }
 
   .login-error {
     text-align: center; color: var(--red); font-size: 13px;
-    margin-top: 16px; min-height: 20px; opacity: 0; transition: opacity .2s;
+    margin-top: 16px; min-height: 20px; opacity: 0;
+    transition: opacity .2s, transform .2s;
+    transform: translateY(-4px);
   }
-  .login-error.show { opacity: 1; }
+  .login-error.show { opacity: 1; transform: translateY(0); }
 
   .login-footer { text-align: center; margin-top: 24px; font-size: 12px; color: var(--text-500); }
 </style>
 </head>
 <body>
+
+<!-- 浮动光晕 -->
+<div class="bg-orb orb-1"></div>
+<div class="bg-orb orb-2"></div>
+<div class="bg-orb orb-3"></div>
+
+<!-- 粒子画布 -->
+<canvas id="particleCanvas"></canvas>
 
 <div class="login-card">
   <div class="login-header">
@@ -172,7 +235,7 @@
       </div>
     </div>
 
-    <button type="submit" class="btn-login">登 录</button>
+    <button type="submit" class="btn-login" id="btnLogin">登 录</button>
   </form>
 
   <div class="login-error" id="loginError"></div>
@@ -188,6 +251,92 @@
     window.location.replace('index.html');
   }
 
+  // ===== 粒子网络 =====
+  var canvas = document.getElementById('particleCanvas');
+  var ctx = canvas.getContext('2d');
+  var particles = [];
+  var PARTICLE_COUNT = 55;
+  var CONNECT_DIST = 130;
+
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  for (var i = 0; i < PARTICLE_COUNT; i++) {
+    particles.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      vx: (Math.random() - .5) * .35,
+      vy: (Math.random() - .5) * .35,
+      r: Math.random() * 2 + .8
+    });
+  }
+
+  function drawParticles() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    for (var i = 0; i < particles.length; i++) {
+      var p = particles[i];
+      p.x += p.vx;
+      p.y += p.vy;
+      if (p.x < 0) p.x = canvas.width;
+      if (p.x > canvas.width) p.x = 0;
+      if (p.y < 0) p.y = canvas.height;
+      if (p.y > canvas.height) p.y = 0;
+
+      // 连线
+      for (var j = i + 1; j < particles.length; j++) {
+        var q = particles[j];
+        var dx = p.x - q.x;
+        var dy = p.y - q.y;
+        var dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < CONNECT_DIST) {
+          var alpha = (1 - dist / CONNECT_DIST) * .18;
+          ctx.strokeStyle = 'rgba(37,99,235,' + alpha + ')';
+          ctx.lineWidth = .5;
+          ctx.beginPath();
+          ctx.moveTo(p.x, p.y);
+          ctx.lineTo(q.x, q.y);
+          ctx.stroke();
+        }
+      }
+
+      // 绘制粒子（带光晕）
+      var grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 3);
+      grad.addColorStop(0, 'rgba(37,99,235,.7)');
+      grad.addColorStop(.5, 'rgba(124,58,237,.25)');
+      grad.addColorStop(1, 'rgba(37,99,235,0)');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r * 3, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#fff';
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    requestAnimationFrame(drawParticles);
+  }
+  drawParticles();
+
+  // ===== 按钮波纹 =====
+  document.getElementById('btnLogin').addEventListener('click', function(e) {
+    var ripple = document.createElement('span');
+    ripple.className = 'ripple';
+    var rect = this.getBoundingClientRect();
+    var size = Math.max(rect.width, rect.height);
+    ripple.style.width = ripple.style.height = size + 'px';
+    ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
+    ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
+    this.appendChild(ripple);
+    setTimeout(function() { ripple.remove(); }, 600);
+  });
+
+  // ===== 验证码 =====
   var captchaA = 0, captchaB = 0;
   function refreshCaptcha() {
     captchaA = Math.floor(Math.random() * 15) + 1;
@@ -201,12 +350,12 @@
   document.getElementById('captchaBox').addEventListener('click', refreshCaptcha);
   refreshCaptcha();
 
+  // ===== 登录 =====
   document.getElementById('loginForm').addEventListener('submit', function(e) {
     e.preventDefault();
     var u = document.getElementById('username').value.trim();
     var p = document.getElementById('password').value;
     var answer = parseInt(document.getElementById('captchaInput').value.trim(), 10);
-    var correct = captchaA + (captchaB > 0 && document.getElementById('captchaQuestion').textContent.indexOf('-') > -1 ? -captchaB : captchaB);
     var expected = document.getElementById('captchaQuestion').textContent.indexOf('-') > -1 ? captchaA - captchaB : captchaA + captchaB;
 
     var errEl = document.getElementById('loginError');
