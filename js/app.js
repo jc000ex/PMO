@@ -3,6 +3,7 @@ let originalProjects = [];   // 从JSON加载的原始数据
 let projects = [];           // 合并localStorage后的数据
 let currentView = 'list';    // 'list' | 'card'
 let currentDetailIdx = -1;   // 当前打开详情的项目索引
+let sortDir = 0;              // 编号排序：0=默认，1=升序，-1=降序
 
 // ===== localStorage 键 =====
 const STORAGE_KEY = 'pmo_project_edits';
@@ -45,8 +46,22 @@ document.addEventListener('DOMContentLoaded', () => {
     sessionStorage.removeItem('pmo_auth');
     window.location.replace('login.html');
   });
+  // 编号排序
+  document.querySelector('.project-table th:nth-child(3)').addEventListener('click', () => {
+    sortDir = sortDir === 1 ? -1 : sortDir === -1 ? 0 : 1;
+    updateSortIcon();
+    renderList();
+    if (currentView === 'card') renderCards();
+  });
+  updateSortIcon();
+  // 新增项目
+  document.getElementById('btnNewProject').addEventListener('click', openNewProject);
+  document.getElementById('newClose').addEventListener('click', closeNewProject);
+  document.getElementById('btnNewCancel').addEventListener('click', closeNewProject);
+  document.getElementById('btnNewSave').addEventListener('click', saveNewProject);
+  document.getElementById('modalNew').addEventListener('click', e => { if (e.target === e.currentTarget) closeNewProject(); });
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') { closeDetail(); closeEdit(); }
+    if (e.key === 'Escape') { closeDetail(); closeEdit(); closeNewProject(); }
   });
 });
 
@@ -179,7 +194,16 @@ function fillSelect(id, values) {
 // ===== 列表视图 =====
 function renderList() {
   const tbody = document.getElementById('listTbody');
-  const filtered = getFilteredProjects();
+  let filtered = getFilteredProjects();
+
+  // 编号排序
+  if (sortDir !== 0) {
+    filtered = filtered.slice().sort((a, b) => {
+      const na = parseInt((a.id || '-').replace(/[^0-9]/g, '')) || 0;
+      const nb = parseInt((b.id || '-').replace(/[^0-9]/g, '')) || 0;
+      return sortDir === 1 ? na - nb : nb - na;
+    });
+  }
 
   if (filtered.length === 0) {
     tbody.innerHTML = '<tr><td colspan="10" class="empty-state">没有匹配的项目</td></tr>';
@@ -665,6 +689,151 @@ function renderChangeLogTable(rows) {
     <tbody>${rows.map((r, i) => `
       <tr><td>${i+1}</td><td>${esc(r.date||'')}</td><td>${esc(r.content||'')}</td><td>${esc(r.impact||'')}</td><td>${esc(r.proposer||'')}</td><td>${esc(r.status||'')}</td></tr>
     `).join('')}</tbody></table>`;
+}
+
+// ===== 编号排序图标 =====
+function updateSortIcon() {
+  const icon = document.getElementById('sortIdIcon');
+  if (!icon) return;
+  if (sortDir === 1) icon.textContent = '▲';
+  else if (sortDir === -1) icon.textContent = '▼';
+  else icon.textContent = '';
+}
+
+// ===== 新增项目 =====
+function openNewProject() {
+  document.getElementById('newBody').innerHTML = `
+    <div class="form-row">
+      <div class="form-group">
+        <label>项目名称 <span style="color:var(--red)">*</span></label>
+        <input type="text" id="newName" placeholder="必填">
+      </div>
+      <div class="form-group">
+        <label>项目编号 <span style="color:var(--red)">*</span></label>
+        <input type="text" id="newId" placeholder="必填">
+      </div>
+    </div>
+    <div class="form-row-3">
+      <div class="form-group">
+        <label>项目阶段</label>
+        <select id="newPhase">
+          <option value="售前">售前</option>
+          <option value="系统测试">系统测试</option>
+          <option value="系统交付" selected>系统交付</option>
+          <option value="运维">运维</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>项目状态</label>
+        <select id="newStatus">
+          <option value="进行中" selected>进行中</option>
+          <option value="已完成">已完成</option>
+          <option value="暂停">暂停</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>优先级</label>
+        <select id="newPriority">
+          <option value="中" selected>中</option>
+          <option value="高">高</option>
+          <option value="低">低</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>客户</label>
+        <input type="text" id="newCustomer">
+      </div>
+      <div class="form-group">
+        <label>项目负责人</label>
+        <input type="text" id="newPm">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>计划开始时间</label>
+        <input type="date" id="newStartDate">
+      </div>
+      <div class="form-group">
+        <label>计划结束时间</label>
+        <input type="date" id="newEndDate">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>项目基本情况</label>
+      <textarea id="newBg" rows="3"></textarea>
+    </div>
+    <div class="form-group">
+      <label>项目目标</label>
+      <textarea id="newObj" rows="2"></textarea>
+    </div>
+    <div class="form-group">
+      <label>项目范围</label>
+      <textarea id="newScope" rows="2"></textarea>
+    </div>
+    <div class="form-group">
+      <label>验收及评价标准</label>
+      <textarea id="newAccept" rows="2"></textarea>
+    </div>
+    <div class="form-group">
+      <label>当前重点工作</label>
+      <textarea id="newFocus" rows="2"></textarea>
+    </div>
+    <div class="form-group">
+      <label>项目当前摘要</label>
+      <textarea id="newSummary" rows="3"></textarea>
+    </div>
+  `;
+  document.getElementById('modalNew').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeNewProject() {
+  document.getElementById('modalNew').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function saveNewProject() {
+  const name = document.getElementById('newName').value.trim();
+  const id = document.getElementById('newId').value.trim();
+  if (!name) { alert('请填写项目名称'); return; }
+  if (!id) { alert('请填写项目编号'); return; }
+
+  const p = {
+    id,
+    name,
+    phase: document.getElementById('newPhase').value,
+    status: document.getElementById('newStatus').value,
+    priority: document.getElementById('newPriority').value,
+    customer: document.getElementById('newCustomer').value.trim(),
+    pm: document.getElementById('newPm').value.trim(),
+    startDate: document.getElementById('newStartDate').value,
+    endDate: document.getElementById('newEndDate').value,
+    actualEndDate: '',
+    members: '',
+    businessPhase: false,
+    businessProgress: '',
+    currentFocus: document.getElementById('newFocus').value.trim(),
+    milestones: [],
+    updates: [],
+    background: document.getElementById('newBg').value.trim(),
+    objectives: document.getElementById('newObj').value.trim(),
+    scope: document.getElementById('newScope').value.trim(),
+    acceptanceCriteria: document.getElementById('newAccept').value.trim(),
+    stakeholders: [],
+    riskPlan: [],
+    changeLog: [],
+    summary: document.getElementById('newSummary').value.trim()
+  };
+
+  projects.push(p);
+  const edits = getLocalEdits();
+  if (!edits[id]) edits[id] = {};
+  edits[id]._localUpdates = [];
+  saveLocalEdits(edits);
+  closeNewProject();
+  renderAll();
 }
 
 // ===== 主题切换 =====

@@ -208,6 +208,19 @@ body {
 }
 .btn-export:hover { background: var(--green); color: #fff; }
 
+.btn-new-project {
+  padding: 6px 14px;
+  border: 1px solid var(--primary);
+  border-radius: var(--radius-sm);
+  background: var(--primary);
+  color: #fff;
+  font-size: 13px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all var(--transition-fast);
+}
+.btn-new-project:hover { background: var(--primary-600); }
+
 .btn-logout {
   padding: 6px 14px;
   border: 1px solid var(--red);
@@ -360,6 +373,12 @@ body {
 }
 .th-no { width: 48px; text-align: center !important; }
 .td-no { text-align: center; color: var(--text-300); font-size: 13px; }
+.project-table th:nth-child(3) { cursor: pointer; user-select: none; }
+.project-table th:nth-child(3):hover { color: var(--primary); }
+.sort-icon {
+  display: inline-block; font-size: 10px; margin-left: 2px;
+  color: var(--primary); vertical-align: middle;
+}
 
 .project-table td {
   padding: 14px 16px;

@@ -25,6 +25,7 @@
       <button class="vt-btn" data-view="card" title="卡片视图">⊞ 卡片</button>
     </div>
     <button class="btn-export" id="btnExport" title="导出最新数据">⬇ 导出数据</button>
+    <button class="btn-new-project" id="btnNewProject" title="新增项目">＋ 新增项目</button>
     <button class="btn-logout" id="btnLogout" title="退出登录">退出</button>
   </div>
 </header>
@@ -73,7 +74,7 @@
       <tr>
         <th class="th-no">#</th>
         <th>项目名称</th>
-        <th>编号</th>
+        <th>编号 <span class="sort-icon" id="sortIdIcon"></span></th>
         <th>阶段</th>
         <th>状态</th>
         <th>优先级</th>
@@ -122,6 +123,21 @@
     <div class="modal-footer">
       <button class="btn-cancel" id="btnEditCancel">取消</button>
       <button class="btn-save" id="btnEditSave">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 新增项目弹窗 -->
+<div class="modal-overlay" id="modalNew">
+  <div class="modal modal-edit">
+    <div class="modal-header">
+      <h2>新增项目</h2>
+      <button class="modal-close" id="newClose">&times;</button>
+    </div>
+    <div class="modal-body" id="newBody"></div>
+    <div class="modal-footer">
+      <button class="btn-cancel" id="btnNewCancel">取消</button>
+      <button class="btn-save" id="btnNewSave">保存</button>
     </div>
   </div>
 </div>
