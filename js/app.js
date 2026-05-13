@@ -310,15 +310,6 @@ function openDetail(idx) {
             <h3>验收及评价标准</h3>
             <div class="detail-desc">${esc(p.acceptanceCriteria) || '<span class="empty-detail">暂无</span>'}</div>
           </div>
-          ${p.summary ? `
-          <div class="detail-block">
-            <h3>项目当前摘要</h3>
-            <div class="summary-block">${esc(p.summary)}</div>
-          </div>` : ''}
-          <div class="detail-block">
-            <h3>当前重点工作</h3>
-            <div class="detail-desc">${esc(p.currentFocus) || '<span class="empty-detail">暂无记录</span>'}</div>
-          </div>
           ${p.businessPhase || p.businessProgress ? `
           <div class="detail-block">
             <h3>商务进展</h3>
@@ -505,14 +496,6 @@ function openEdit(idx) {
       <textarea id="editAccept" rows="2">${escAttr(p.acceptanceCriteria)}</textarea>
     </div>
     <div class="form-group">
-      <label>当前重点工作</label>
-      <textarea id="editFocus" rows="2">${escAttr(p.currentFocus)}</textarea>
-    </div>
-    <div class="form-group">
-      <label>项目当前摘要</label>
-      <textarea id="editSummary" rows="3">${escAttr(p.summary)}</textarea>
-    </div>
-    <div class="form-group">
       <label>干系人登记表（每行一条：姓名,重要性,类别,单位及职务,联系方式,我方联系人,备注）</label>
       <textarea id="editStakeholders" rows="4">${(p.stakeholders||[]).map(s => [s.name,s.importance,s.category,s.unit,s.contact,s.ourContact,s.remark].map(v=>v||'').join(',')).join('\n')}</textarea>
     </div>
@@ -556,8 +539,8 @@ function saveEdit() {
     objectives: document.getElementById('editObj').value.trim(),
     scope: document.getElementById('editScope').value.trim(),
     acceptanceCriteria: document.getElementById('editAccept').value.trim(),
-    currentFocus: document.getElementById('editFocus').value.trim(),
-    summary: document.getElementById('editSummary').value.trim(),
+    currentFocus: '',
+    summary: '',
     businessProgress: document.getElementById('editBizProgress').value.trim(),
     stakeholders: parseCsvLines(document.getElementById('editStakeholders').value, ['name','importance','category','unit','contact','ourContact','remark']),
     riskPlan: parseCsvLines(document.getElementById('editRiskPlan').value, ['category','content','solution']),
@@ -776,14 +759,6 @@ function openNewProject() {
       <label>验收及评价标准</label>
       <textarea id="newAccept" rows="2"></textarea>
     </div>
-    <div class="form-group">
-      <label>当前重点工作</label>
-      <textarea id="newFocus" rows="2"></textarea>
-    </div>
-    <div class="form-group">
-      <label>项目当前摘要</label>
-      <textarea id="newSummary" rows="3"></textarea>
-    </div>
   `;
   document.getElementById('modalNew').classList.add('open');
   document.body.style.overflow = 'hidden';
@@ -814,7 +789,7 @@ function saveNewProject() {
     members: '',
     businessPhase: false,
     businessProgress: '',
-    currentFocus: document.getElementById('newFocus').value.trim(),
+    currentFocus: '',
     milestones: [],
     updates: [],
     background: document.getElementById('newBg').value.trim(),
@@ -824,7 +799,7 @@ function saveNewProject() {
     stakeholders: [],
     riskPlan: [],
     changeLog: [],
-    summary: document.getElementById('newSummary').value.trim()
+    summary: ''
   };
 
   projects.push(p);
