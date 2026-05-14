@@ -348,7 +348,16 @@ function openDetail(idx) {
 
       <!-- 右栏：项目动态 -->
       <div class="detail-col detail-col-right">
-        <div class="col-title">项目动态</div>
+        <div class="col-title">
+          项目动态
+          ${p.updates && p.updates.length > 0 ? `
+          <span class="update-filter">
+            <span class="uf-tag active" data-filter="all">全部</span>
+            <span class="uf-tag" data-filter="oa">OA</span>
+            <span class="uf-tag" data-filter="daily">日常</span>
+          </span>
+          ` : ''}
+        </div>
         <div class="col-body">
           <div class="add-update-form">
             <input type="date" id="inputUpdateDate" value="${new Date().toISOString().slice(0,10)}">
@@ -356,12 +365,7 @@ function openDetail(idx) {
             <button class="btn-add" id="btnAddUpdate">添加</button>
           </div>
           ${p.updates && p.updates.length > 0 ? `
-            <div class="update-filter" style="margin-top:12px;display:flex;gap:8px">
-              <button class="uf-btn active" data-filter="all">全部</button>
-              <button class="uf-btn" data-filter="oa">OA</button>
-              <button class="uf-btn" data-filter="daily">日常</button>
-            </div>
-            <div class="timeline" id="detailTimeline" style="margin-top:12px">
+            <div class="timeline" id="detailTimeline" style="margin-top:14px">
               ${p.updates.slice().reverse().map((u,i) => `
                 <div class="timeline-item" data-source="${u.author === 'OA周报' ? 'oa' : 'daily'}">
                   <div class="timeline-date">${esc(u.date || '')} · ${esc(u.author || '')}</div>
@@ -384,18 +388,14 @@ function openDetail(idx) {
     if (e.key === 'Enter') addUpdate(idx);
   });
 
-  // 绑定动态筛选按钮
-  document.querySelectorAll('.uf-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.uf-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      const filter = btn.dataset.filter;
+  // 绑定动态筛选
+  document.querySelectorAll('.uf-tag').forEach(tag => {
+    tag.addEventListener('click', () => {
+      document.querySelectorAll('.uf-tag').forEach(t => t.classList.remove('active'));
+      tag.classList.add('active');
+      const filter = tag.dataset.filter;
       document.querySelectorAll('#detailTimeline .timeline-item').forEach(item => {
-        if (filter === 'all' || item.dataset.source === filter) {
-          item.style.display = '';
-        } else {
-          item.style.display = 'none';
-        }
+        item.style.display = (filter === 'all' || item.dataset.source === filter) ? '' : 'none';
       });
     });
   });

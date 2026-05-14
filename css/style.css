@@ -604,6 +604,7 @@ body {
 
 /* 列标题 */
 .col-title {
+  display: flex; align-items: center;
   padding: 10px 16px;
   font-size: 15px;
   font-weight: 700;
@@ -735,19 +736,16 @@ body {
 }
 .add-update-form .btn-add:hover { background: var(--primary-600); }
 
-/* 动态筛选按钮 */
-.uf-btn {
-  padding: 6px 18px; border: 1.5px solid var(--border); border-radius: 16px;
-  background: transparent; color: var(--text-500);
-  font-size: 13px; font-family: inherit; cursor: pointer;
+/* 动态筛选标签（标题内联） */
+.update-filter { margin-left: 12px; font-weight: 400; }
+.uf-tag {
+  padding: 1px 10px; border-radius: 10px;
+  font-size: 12px; cursor: pointer; color: var(--text-500);
   transition: all var(--transition-fast);
 }
-.uf-btn:hover {
-  border-color: var(--primary); color: var(--primary);
-}
-.uf-btn.active {
-  background: var(--primary); border-color: var(--primary); color: #fff;
-}
+.uf-tag:not(:last-child) { margin-right: 2px; }
+.uf-tag:hover { color: var(--primary); background: var(--primary-bg); }
+.uf-tag.active { color: #fff; background: var(--primary); }
 
 .btn-edit {
   padding: 6px 14px; border: 1px solid var(--border);
