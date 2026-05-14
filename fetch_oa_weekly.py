@@ -3,8 +3,8 @@ Fetch OA weekly report data and update projects.json with 周报动态.
 Usage: python fetch_oa_weekly.py
 Requires: oa_cookie.txt with JSESSIONID cookie value.
 """
-import urllib.request, ssl, json, sys, os
-from datetime import date
+import urllib.request, ssl, json, sys, os, re
+from datetime import datetime
 
 sys.stdout.reconfigure(encoding='utf-8')
 
@@ -15,8 +15,6 @@ COOKIE_FILE = os.path.join(SCRIPT_DIR, 'oa_cookie.txt')
 PROJECTS_FILE = os.path.join(SCRIPT_DIR, 'data', 'projects.json')
 
 # OA project name keywords -> (our project ID, our project name keyword)
-# The name_keyword is used to disambiguate when multiple projects share the same ID
-# Order matters: more specific matches first
 OA_PROJECT_MAP = [
     ('龙华区低空智联网数字底座一体化建设', '-', '龙华'),
     ('中移凌云低空监管平台（apec', 'GD-202', 'apec'),
@@ -44,7 +42,6 @@ OA_PROJECT_MAP = [
 
 
 def load_cookie():
-    """Read cookie from file."""
     if not os.path.exists(COOKIE_FILE):
         print(f'ERROR: Cookie file not found: {COOKIE_FILE}')
         print('Create oa_cookie.txt with content: JSESSIONID=your_session_id')
@@ -54,11 +51,9 @@ def load_cookie():
 
 
 def fetch_weekly_data(cookie):
-    """Fetch all weekly report data from OA."""
     ctx = ssl.create_default_context()
     ctx.check_hostname = False
     ctx.verify_mode = ssl.CERT_NONE
-
     h = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0',
         'Cookie': cookie,
@@ -77,7 +72,6 @@ def fetch_weekly_data(cookie):
 
 
 def map_to_our_project(oa_project_name):
-    """Map OA project name to (our_project_id, name_keyword)."""
     for keyword, our_id, name_kw in OA_PROJECT_MAP:
         if keyword in oa_project_name:
             return our_id, name_kw
@@ -85,10 +79,6 @@ def map_to_our_project(oa_project_name):
 
 
 def group_by_project(records, target_week_dates=None):
-    """Group records by our project ID for a given week.
-    target_week_dates: list of date strings to include (e.g. ['2026-05-11', '2026-05-09'])
-    Returns dict: {(our_id, name_kw): [{userName, workHours, thisWeekWork, nextWeekPlan, help}]}
-    """
     groups = {}
     for r in records:
         week = r.get('createTime', '')[:10]
@@ -112,33 +102,138 @@ def group_by_project(records, target_week_dates=None):
     return groups
 
 
+# ===== Summarization =====
+
+def clean_work_text(text):
+    """Clean OA work item text: remove hierarchy markers, progress, excess whitespace."""
+    # Remove leading tree markers like "- 组件", "  - 子项", "- "
+    text = re.sub(r'^[\s\-—•·]+[一-鿿\w\s]+[\s\-—•·]+', '', text)
+    text = re.sub(r'^[\s\-—•·]+', '', text)
+    # Remove progress like [100%], (100%), 100%
+    text = re.sub(r'[\[（\(]\d{1,3}%[\]）\)]', '', text)
+    # Remove standalone progress numbers at start
+    text = re.sub(r'^\d{1,3}%\s*', '', text)
+    # Collapse whitespace
+    text = re.sub(r'\s+', ' ', text)
+    return text.strip().rstrip('，。；;、')
+
+
+def extract_atomic_items(work_list):
+    """Break down work entries into atomic items, clean, and deduplicate."""
+    raw_items = []
+    for work in work_list:
+        work = work.strip()
+        if not work:
+            continue
+        # Split by common delimiters
+        parts = re.split(r'[;；\n]', work)
+        for p in parts:
+            cleaned = clean_work_text(p)
+            if len(cleaned) >= 5:
+                raw_items.append(cleaned)
+
+    # Deduplicate by first 20 chars
+    seen = set()
+    unique = []
+    for item in raw_items:
+        prefix = item[:20]
+        if prefix not in seen:
+            seen.add(prefix)
+            unique.append(item)
+    return unique
+
+
+def categorize_items(items):
+    """Categorize work items. Returns dict of category -> items."""
+    cats = {'开发': [], '修复': [], '测试': [], '部署对接': [], '文档': [], '其他': []}
+
+    dev_kw = ['开发', '新增', '实现', '构建', '重构', '编写', '撰写', '制作']
+    fix_kw = ['修复', 'bug', 'BUG', '缺陷', '问题', '异常']
+    test_kw = ['测试', '复测', '验收', '回归', '压测']
+    deploy_kw = ['部署', '安装', '上线', '发布', '配置', '对接', '沟通', '协调', '会议', '支撑', '演示']
+    doc_kw = ['文档', 'PPT', '方案', '需求', '说明书', '手册', '脚本', '素材', '视频']
+
+    for item in items:
+        if any(kw in item for kw in fix_kw):
+            cats['修复'].append(item)
+        elif any(kw in item for kw in dev_kw):
+            cats['开发'].append(item)
+        elif any(kw in item for kw in test_kw):
+            cats['测试'].append(item)
+        elif any(kw in item for kw in deploy_kw):
+            cats['部署对接'].append(item)
+        elif any(kw in item for kw in doc_kw):
+            cats['文档'].append(item)
+        else:
+            cats['其他'].append(item)
+    return cats
+
+
 def generate_summary(entries):
-    """Generate a concise summary from work entries."""
-    lines = []
+    """Generate a 200-char structured summary from all work entries."""
+    users = list(set(e['userName'] for e in entries))
+    total_h = sum(e.get('workHours', 0) for e in entries)
+
+    # Collect all work items
+    all_works = []
     for e in entries:
-        user = e['userName']
-        hours = e['workHours']
-        works = e['thisWeekWork']
-        plans = e['nextWeekPlan']
-        helps = e['help']
+        all_works.extend(e.get('thisWeekWork', []))
 
-        # Clean and flatten work items
-        all_work = '; '.join(w.strip() for w in works if w.strip())
-        all_plan = '; '.join(w.strip() for w in plans if w.strip())
+    items = extract_atomic_items(all_works)
+    if not items:
+        return ''
 
-        if all_work:
-            lines.append(f"【{user}·{hours}h】{all_work[:300]}")
-        if all_plan:
-            lines.append(f"  下周计划: {all_plan[:200]}")
-        if helps:
-            all_help = '; '.join(w.strip() for w in helps if w.strip())
-            lines.append(f"  ⚠需协助: {all_help[:200]}")
-    return '\n'.join(lines)
+    cats = categorize_items(items)
+
+    # Build summary (target: under 200 chars)
+    parts = [f"本周{len(users)}人参与（{total_h}h）"]
+
+    # Pick top items from each category, keep it tight
+    selected = []
+    for cat_name in ['修复', '开发', '测试', '部署对接', '文档', '其他']:
+        cat_items = cats.get(cat_name, [])
+        for item in cat_items[:2]:  # max 2 per category
+            short = item[:55].rstrip('，。；;、')
+            if short and short not in selected:
+                selected.append(short)
+            if len(selected) >= 5:
+                break
+        if len(selected) >= 5:
+            break
+
+    if selected:
+        parts.append('：' + '；'.join(selected))
+
+    # Next week plans (concise)
+    all_plans = []
+    for e in entries:
+        all_plans.extend(e.get('nextWeekPlan', []))
+    plan_items = extract_atomic_items(all_plans)
+    if plan_items:
+        plan_text = '；'.join(p[:35].rstrip('，。；、') for p in plan_items[:2])
+        parts.append('。下周：' + plan_text)
+
+    # Help needed
+    all_helps = []
+    for e in entries:
+        all_helps.extend(e.get('help', []))
+    help_items = extract_atomic_items(all_helps)
+    if help_items:
+        help_text = '；'.join(h[:40] for h in help_items[:1])
+        parts.append('。需协助：' + help_text)
+
+    result = ''.join(parts)
+
+    # Truncate to 200 chars at sentence boundary
+    if len(result) > 200:
+        result = result[:197] + '...'
+
+    return result
 
 
 def get_latest_week_dates(records):
     """Get all dates in the latest week (past 7 days from max date)."""
-    from datetime import datetime, timedelta
+    from datetime import timedelta
     dates = set()
     for r in records:
         d = r.get('createTime', '')[:10]
@@ -155,26 +250,18 @@ def get_latest_week_dates(records):
 
 
 def find_project_key(project, groups):
-    """Find the matching group key for a project.
-    Returns (pid, name_kw) key if matched, None otherwise.
-    """
     pid = project['id']
     name = project['name']
     for (gid, gname_kw) in groups:
         if gid == pid:
-            # If ID is unique (not '-'), match directly
             if gid != '-':
                 return (gid, gname_kw)
-            # If ID is '-', also check name keyword
             if gname_kw in name:
                 return (gid, gname_kw)
     return None
 
 
 def update_projects_json(groups, week):
-    """Add 周报动态 entries to projects.json.
-    Removes any existing OA周报 entries first, then adds fresh ones.
-    """
     with open(PROJECTS_FILE, 'r', encoding='utf-8') as f:
         projects = json.load(f)
 
@@ -182,12 +269,12 @@ def update_projects_json(groups, week):
     updated = 0
     skipped = 0
 
-    # First, remove all existing OA周报 entries
+    # Remove existing OA entries
     for project in projects:
         if 'updates' in project:
             project['updates'] = [u for u in project['updates'] if u.get('author') != 'OA周报']
 
-    # Now add fresh entries
+    # Add fresh entries
     for project in projects:
         key = find_project_key(project, groups)
         if key is None:
@@ -208,7 +295,7 @@ def update_projects_json(groups, week):
             'author': 'OA周报',
         })
         updated += 1
-        print(f'  [OK] {project["id"]} {project["name"]}: added 周报动态')
+        print(f'  [OK] {project["id"]} {project["name"]}: {len(summary)}字')
 
     with open(PROJECTS_FILE, 'w', encoding='utf-8') as f:
         json.dump(projects, f, ensure_ascii=False, indent=2)
@@ -217,50 +304,39 @@ def update_projects_json(groups, week):
 
 
 def show_preview(groups, week):
-    """Show preview of what will be added."""
     print(f'\n{"="*60}')
-    print(f'OA Weekly Report Summary - Week of {week}')
+    print(f'OA Weekly Report Summary - {week}')
     print(f'{"="*60}')
     for (pid, name_kw), entries in groups.items():
-        print(f'\n--- {pid} ({name_kw}) ---')
+        users = set(e['userName'] for e in entries)
+        print(f'\n--- {pid} ({name_kw}) | {len(users)}人: {", ".join(users)} ---')
         summary = generate_summary(entries)
-        print(summary[:600])
-    print(f'\n{"="*60}')
-    print(f'Projects with data: {len(groups)}')
-    for (pid, name_kw) in groups:
-        print(f'  {pid} ({name_kw}): {len(groups[(pid, name_kw)])} entries')
+        print(f'  [{len(summary)}字] {summary}')
 
 
 def main():
-    print('=== OA Weekly Report Fetcher ===')
-    print()
+    print('=== OA Weekly Report Fetcher ===\n')
 
-    # Load cookie
     cookie = load_cookie()
     print(f'[1] Loaded cookie from {COOKIE_FILE}')
 
-    # Fetch data
     print('[2] Fetching weekly report data from OA...')
     records = fetch_weekly_data(cookie)
     print(f'    Got {len(records)} records')
 
-    # Find latest week dates (past 7 days from max)
     week_dates = get_latest_week_dates(records)
     print(f'    Latest week dates: {week_dates}')
 
-    # Group by our project
     groups = group_by_project(records, week_dates)
     print(f'[3] Mapped to {len(groups)} of our projects')
 
-    # Preview
     week_label = f'{week_dates[-1]} ~ {week_dates[0]}'
     show_preview(groups, week_label)
 
-    # Update
     print(f'\n[4] Updating {PROJECTS_FILE}...')
     updated, skipped = update_projects_json(groups, week_label)
     print(f'    Updated: {updated}, Skipped: {skipped}')
-    print('\nDone! Refresh index.html to see 周报动态.')
+    print('\nDone! Commit and push to GitHub to see 周报动态 online.')
 
 
 if __name__ == '__main__':
