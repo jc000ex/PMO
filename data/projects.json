@@ -614,5 +614,37 @@
     "riskPlan": [],
     "changeLog": [],
     "summary": ""
+  },
+  {
+    "id": "UN-205",
+    "name": "宏大",
+    "phase": "售前",
+    "status": "进行中",
+    "priority": "中",
+    "customer": "",
+    "pm": "",
+    "startDate": "",
+    "endDate": "",
+    "actualEndDate": "",
+    "members": "",
+    "businessPhase": false,
+    "businessProgress": "",
+    "currentFocus": "",
+    "milestones": [],
+    "background": "",
+    "objectives": "",
+    "scope": "",
+    "acceptanceCriteria": "",
+    "stakeholders": [],
+    "riskPlan": [],
+    "changeLog": [],
+    "summary": "",
+    "updates": [
+      {
+        "date": "2026-05-14",
+        "content": "讨论了三维模型方式，高斯泼溅ply能修复水面破洞但不可测量，b3dm水面有破洞但可满足测量要求",
+        "author": "PMO"
+      }
+    ]
   }
 ]
