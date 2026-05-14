@@ -735,6 +735,20 @@ body {
 }
 .add-update-form .btn-add:hover { background: var(--primary-600); }
 
+/* 动态筛选按钮 */
+.uf-btn {
+  padding: 6px 18px; border: 1.5px solid var(--border); border-radius: 16px;
+  background: transparent; color: var(--text-500);
+  font-size: 13px; font-family: inherit; cursor: pointer;
+  transition: all var(--transition-fast);
+}
+.uf-btn:hover {
+  border-color: var(--primary); color: var(--primary);
+}
+.uf-btn.active {
+  background: var(--primary); border-color: var(--primary); color: #fff;
+}
+
 .btn-edit {
   padding: 6px 14px; border: 1px solid var(--border);
   border-radius: var(--radius-sm); background: var(--surface);

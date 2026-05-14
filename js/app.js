@@ -356,9 +356,14 @@ function openDetail(idx) {
             <button class="btn-add" id="btnAddUpdate">添加</button>
           </div>
           ${p.updates && p.updates.length > 0 ? `
-            <div class="timeline" style="margin-top:14px">
-              ${p.updates.slice().reverse().map(u => `
-                <div class="timeline-item">
+            <div class="update-filter" style="margin-top:12px;display:flex;gap:8px">
+              <button class="uf-btn active" data-filter="all">全部</button>
+              <button class="uf-btn" data-filter="oa">OA</button>
+              <button class="uf-btn" data-filter="daily">日常</button>
+            </div>
+            <div class="timeline" id="detailTimeline" style="margin-top:12px">
+              ${p.updates.slice().reverse().map((u,i) => `
+                <div class="timeline-item" data-source="${u.author === 'OA周报' ? 'oa' : 'daily'}">
                   <div class="timeline-date">${esc(u.date || '')} · ${esc(u.author || '')}</div>
                   <div class="timeline-content">${esc(u.content || u)}</div>
                 </div>
@@ -377,6 +382,22 @@ function openDetail(idx) {
   document.getElementById('btnAddUpdate').addEventListener('click', () => addUpdate(idx));
   document.getElementById('inputUpdate').addEventListener('keydown', e => {
     if (e.key === 'Enter') addUpdate(idx);
+  });
+
+  // 绑定动态筛选按钮
+  document.querySelectorAll('.uf-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.uf-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const filter = btn.dataset.filter;
+      document.querySelectorAll('#detailTimeline .timeline-item').forEach(item => {
+        if (filter === 'all' || item.dataset.source === filter) {
+          item.style.display = '';
+        } else {
+          item.style.display = 'none';
+        }
+      });
+    });
   });
 }
 
