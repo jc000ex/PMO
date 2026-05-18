@@ -785,9 +785,24 @@ function openNewProject() {
   document.body.style.overflow = 'hidden';
 }
 
-function closeNewProject() {
+function closeNewProject(force) {
+  if (!force && hasNewFormContent()) {
+    if (!confirm('表单中有已填写的内容，确定要关闭吗？数据不会保存。')) return;
+  }
   document.getElementById('modalNew').classList.remove('open');
   document.body.style.overflow = '';
+}
+
+function hasNewFormContent() {
+  var fields = ['newName', 'newId', 'newCustomer', 'newPm', 'newBg', 'newObj', 'newScope', 'newAccept'];
+  for (var i = 0; i < fields.length; i++) {
+    var el = document.getElementById(fields[i]);
+    if (el && el.value.trim()) return true;
+  }
+  var start = document.getElementById('newStartDate');
+  var end = document.getElementById('newEndDate');
+  if ((start && start.value) || (end && end.value)) return true;
+  return false;
 }
 
 function saveNewProject() {
@@ -828,7 +843,7 @@ function saveNewProject() {
   if (!edits[id]) edits[id] = {};
   edits[id]._localUpdates = [];
   saveLocalEdits(edits);
-  closeNewProject();
+  closeNewProject(true);
   renderAll();
 }
 
