@@ -458,9 +458,9 @@ function openEdit(idx) {
         <label>项目阶段</label>
         <select id="editPhase">
           <option value="售前" ${p.phase==='售前'?'selected':''}>售前</option>
-          <option value="系统测试" ${p.phase==='系统测试'?'selected':''}>系统测试</option>
-          <option value="系统交付" ${p.phase==='系统交付'?'selected':''}>系统交付</option>
-          <option value="运维" ${p.phase==='运维'?'selected':''}>运维</option>
+          <option value="实施开发中" ${p.phase==='实施开发中'?'selected':''}>实施开发中</option>
+          <option value="系统测试中" ${p.phase==='系统测试中'?'selected':''}>系统测试中</option>
+          <option value="已结项" ${p.phase==='已结项'?'selected':''}>已结项</option>
         </select>
       </div>
       <div class="form-group">
@@ -468,12 +468,12 @@ function openEdit(idx) {
         <select id="editStatus">
           <option value="进行中" ${p.status==='进行中'?'selected':''}>进行中</option>
           <option value="已完成" ${p.status==='已完成'?'selected':''}>已完成</option>
-          <option value="暂停" ${p.status==='暂停'?'selected':''}>暂停</option>
         </select>
       </div>
       <div class="form-group">
         <label>优先级</label>
         <select id="editPriority">
+          <option value="紧急" ${p.priority==='紧急'?'selected':''}>紧急</option>
           <option value="高" ${p.priority==='高'?'selected':''}>高</option>
           <option value="中" ${p.priority==='中'?'selected':''}>中</option>
           <option value="低" ${p.priority==='低'?'selected':''}>低</option>
@@ -644,19 +644,19 @@ function debounce(fn, delay) {
 }
 
 function phaseBadge(phase) {
-  const map = { '系统测试': 'sys-test', '系统交付': 'delivery', '售前': 'presale', '运维': 'ops' };
+  const map = { '售前': 'presale', '实施开发中': 'dev', '系统测试中': 'test', '已结项': 'done' };
   const cls = map[phase] || 'default';
   return `<span class="badge badge-phase-${cls}">${esc(phase) || '未知'}</span>`;
 }
 
 function statusBadge(status) {
-  const map = { '进行中': 'active', '已完成': 'done', '暂停': 'paused', '有风险': 'risk' };
+  const map = { '进行中': 'active', '已完成': 'done' };
   const cls = map[status] || 'default';
   return `<span class="badge badge-status-${cls}">${esc(status) || '未知'}</span>`;
 }
 
 function priorityBadge(priority) {
-  const map = { '高': 'high', '中': 'mid', '低': 'low' };
+  const map = { '紧急': 'urgent', '高': 'high', '中': 'mid', '低': 'low' };
   const cls = map[priority] || 'default';
   return `<span class="badge badge-priority-${cls}">${esc(priority) || '--'}</span>`;
 }
@@ -722,9 +722,9 @@ function openNewProject() {
         <label>项目阶段</label>
         <select id="newPhase">
           <option value="售前">售前</option>
-          <option value="系统测试">系统测试</option>
-          <option value="系统交付" selected>系统交付</option>
-          <option value="运维">运维</option>
+          <option value="实施开发中" selected>实施开发中</option>
+          <option value="系统测试中">系统测试中</option>
+          <option value="已结项">已结项</option>
         </select>
       </div>
       <div class="form-group">
@@ -732,13 +732,13 @@ function openNewProject() {
         <select id="newStatus">
           <option value="进行中" selected>进行中</option>
           <option value="已完成">已完成</option>
-          <option value="暂停">暂停</option>
         </select>
       </div>
       <div class="form-group">
         <label>优先级</label>
         <select id="newPriority">
           <option value="中" selected>中</option>
+          <option value="紧急">紧急</option>
           <option value="高">高</option>
           <option value="低">低</option>
         </select>

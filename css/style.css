@@ -517,21 +517,21 @@ body {
   border-radius: 12px; font-size: 12px; font-weight: 500; white-space: nowrap;
   transition: all var(--transition-fast);
 }
-.badge-phase-sys-test { background: #dbeafe; color: #1e40af; }
-.badge-phase-delivery { background: #d1fae5; color: #065f46; }
 .badge-phase-presale { background: #fef3c7; color: #92400e; }
-.badge-phase-ops { background: #ede9fe; color: #5b21b6; }
+.badge-phase-dev { background: #dbeafe; color: #1e40af; }
+.badge-phase-test { background: #ede9fe; color: #5b21b6; }
+.badge-phase-done { background: #d1fae5; color: #065f46; }
 .badge-phase-default { background: #f1f5f9; color: #64748b; }
 
 .badge-status-active { background: var(--green-light); color: #065f46; }
 .badge-status-done { background: var(--purple-light); color: #5b21b6; }
-.badge-status-paused { background: #f1f5f9; color: #64748b; }
-.badge-status-risk { background: var(--red-light); color: #991b1b; }
 .badge-status-default { background: #f1f5f9; color: #64748b; }
 
-.badge-priority-high { background: var(--red-light); color: #991b1b; }
-.badge-priority-mid { background: var(--orange-light); color: #92400e; }
+.badge-priority-urgent { background: var(--red-light); color: #991b1b; }
+.badge-priority-high { background: var(--orange-light); color: #92400e; }
+.badge-priority-mid { background: #dbeafe; color: #1e40af; }
 .badge-priority-low { background: #f1f5f9; color: #64748b; }
+.badge-priority-default { background: #f1f5f9; color: #64748b; }
 
 /* ===== 弹窗 ===== */
 .modal-overlay {
