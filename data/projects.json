@@ -54,6 +54,11 @@
         "author": ""
       },
       {
+        "date": "2026-05-15",
+        "content": "客户投诉进度缓慢，输出进度报告一份，涉及外部延误因素及内部因素，具体看报告。本周开始同步推进两大主线工作，一是开发交付（两人到现场开始联调测试），二是汇报演示工作（word+ppt稿件）。",
+        "author": "PMO"
+      },
+      {
         "date": "2026-05-15 ~ 2026-05-18 (OA周报)",
         "content": "本周2人参与（3.5h）：2、测试AI识别-违停识别功能；3、帮忙协调交通事故快速处置场景及机场；1、调整违停巡查航线；倾斜模型转dsm。下周：测试AI识别--违停识别功能、交通事故快处功能",
         "author": "OA周报"
@@ -646,5 +651,37 @@
         "author": "PMO"
       }
     ]
+  },
+  {
+    "id": "CQ-236",
+    "name": "交警无人机智能执法管理平台（重庆）",
+    "phase": "实施开发中",
+    "status": "进行中",
+    "priority": "高",
+    "customer": "",
+    "pm": "马景鹏/李一丁",
+    "startDate": "",
+    "endDate": "",
+    "actualEndDate": "",
+    "members": "",
+    "businessPhase": false,
+    "businessProgress": "",
+    "currentFocus": "",
+    "milestones": [],
+    "updates": [
+      {
+        "date": "2026-05-18",
+        "content": "更新一版新UI的新平台，尚未上线定制化功能，计划本周完成。",
+        "author": "PMO"
+      }
+    ],
+    "background": "",
+    "objectives": "",
+    "scope": "",
+    "acceptanceCriteria": "",
+    "stakeholders": [],
+    "riskPlan": [],
+    "changeLog": [],
+    "summary": ""
   }
 ]
