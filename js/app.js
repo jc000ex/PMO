@@ -94,22 +94,49 @@ function saveLocalEdits(edits) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(edits));
 }
 
+function parseUpdateDate(u) {
+  var m = (u.date || '').match(/\d{4}-\d{2}-\d{2}/);
+  return m ? m[0] : '0000-00-00';
+}
+
+function sortUpdates(updates) {
+  return updates.sort(function(a, b) {
+    return parseUpdateDate(b).localeCompare(parseUpdateDate(a));
+  });
+}
+
 function mergeLocalEdits() {
-  const edits = getLocalEdits();
-  projects = originalProjects.map((p, i) => {
-    const key = p.id || `_idx_${i}`;
+  var edits = getLocalEdits();
+  projects = originalProjects.map(function(p, i) {
+    var key = p.id || '_idx_' + i;
     if (edits[key]) {
-      // 合并：local层覆盖原始层
-      const merged = { ...p, ...edits[key] };
-      // updates 数组要合并（原始 + 本地添加）
+      var merged = { ...p, ...edits[key] };
+      // 构建完整 updates 列表：JSON原始 + 本地添加
+      var allUpdates = (p.updates || []).slice();
       if (edits[key]._localUpdates) {
-        merged.updates = [...(p.updates || []), ...edits[key]._localUpdates];
+        allUpdates = allUpdates.concat(edits[key]._localUpdates);
       }
-      // 清理内部字段，避免泄漏到渲染数据
+      // 应用 OA 条目的编辑/删除（存储在 localStorage 中）
+      if (edits[key]._deletedOA) {
+        allUpdates = allUpdates.filter(function(u) {
+          return edits[key]._deletedOA.indexOf(u.content) === -1;
+        });
+      }
+      if (edits[key]._editedOA) {
+        allUpdates = allUpdates.map(function(u) {
+          var edit = edits[key]._editedOA[u.content];
+          return edit ? { date: edit.date, content: edit.content, author: u.author } : u;
+        });
+      }
+      merged.updates = sortUpdates(allUpdates);
       delete merged._localUpdates;
+      delete merged._deletedOA;
+      delete merged._editedOA;
       return merged;
     }
-    return { ...p };
+    var cloned = { ...p };
+    if (cloned.updates) cloned.updates = sortUpdates(cloned.updates.slice());
+    return cloned;
   });
 }
 
@@ -366,10 +393,16 @@ function openDetail(idx) {
           </div>
           ${p.updates && p.updates.length > 0 ? `
             <div class="timeline" id="detailTimeline" style="margin-top:14px">
-              ${p.updates.slice().reverse().map((u,i) => `
-                <div class="timeline-item" data-source="${u.author === 'OA周报' ? 'oa' : 'daily'}">
+              ${p.updates.map((u,i) => `
+                <div class="timeline-item" data-source="${u.author === 'OA周报' ? 'oa' : 'daily'}" data-update-idx="${i}">
                   <div class="timeline-date">${esc(u.date || '')} · ${esc(u.author || '')}</div>
-                  <div class="timeline-content">${esc(u.content || u)}</div>
+                  <div class="timeline-content">
+                    <span class="ti-text">${esc(u.content || u)}</span>
+                    <span class="ti-actions">
+                      <button class="ti-btn ti-edit" data-action="edit" data-idx="${i}" title="编辑">✎</button>
+                      <button class="ti-btn ti-del" data-action="delete" data-idx="${i}" title="删除">✕</button>
+                    </span>
+                  </div>
                 </div>
               `).join('')}
             </div>
@@ -399,34 +432,151 @@ function openDetail(idx) {
       });
     });
   });
+
+  // 绑定编辑/删除按钮（事件委托）
+  var timeline = document.getElementById('detailTimeline');
+  if (timeline) {
+    timeline.addEventListener('click', function(e) {
+      var btn = e.target.closest('.ti-btn');
+      if (!btn) return;
+      var action = btn.dataset.action;
+      var updateIdx = parseInt(btn.dataset.idx);
+      if (action === 'edit') {
+        editUpdate(idx, updateIdx);
+      } else if (action === 'delete') {
+        deleteUpdate(idx, updateIdx);
+      }
+    });
+  }
 }
 
 function addUpdate(idx) {
-  const input = document.getElementById('inputUpdate');
-  const dateInput = document.getElementById('inputUpdateDate');
-  const content = input.value.trim();
+  var input = document.getElementById('inputUpdate');
+  var dateInput = document.getElementById('inputUpdateDate');
+  var content = input.value.trim();
   if (!content) return;
 
-  const p = projects[idx];
-  const key = p.id || `_idx_${idx}`;
-  const edits = getLocalEdits();
+  var p = projects[idx];
+  var key = p.id || '_idx_' + idx;
+  var edits = getLocalEdits();
   if (!edits[key]) edits[key] = {};
   if (!edits[key]._localUpdates) edits[key]._localUpdates = [];
 
-  const dateVal = dateInput ? dateInput.value : new Date().toISOString().slice(0, 10);
-  const date = dateVal || new Date().toISOString().slice(0, 10);
-  edits[key]._localUpdates.push({ date, content, author: 'PMO' });
+  var dateVal = dateInput ? dateInput.value : new Date().toISOString().slice(0, 10);
+  var date = dateVal || new Date().toISOString().slice(0, 10);
+  var newEntry = { date: date, content: content, author: 'PMO' };
+  edits[key]._localUpdates.push(newEntry);
+  // 排序本地更新
+  edits[key]._localUpdates = sortUpdates(edits[key]._localUpdates);
   saveLocalEdits(edits);
 
   // 更新内存
   if (!p.updates) p.updates = [];
-  p.updates.push({ date, content, author: 'PMO' });
+  p.updates.push(newEntry);
+  p.updates = sortUpdates(p.updates);
 
   input.value = '';
-  // 刷新详情
   openDetail(idx);
   renderAll();
   showToast('动态已添加 ✓');
+}
+
+function editUpdate(projectIdx, updateIdx) {
+  var p = projects[projectIdx];
+  var u = p.updates[updateIdx];
+  if (!u) return;
+
+  var item = document.querySelector('#detailTimeline .timeline-item[data-update-idx="' + updateIdx + '"]');
+  if (!item) return;
+
+  var contentDiv = item.querySelector('.timeline-content');
+  var oldText = u.content || '';
+  var oldDate = parseUpdateDate(u);
+
+  contentDiv.innerHTML = `
+    <div class="ti-edit-form">
+      <input type="date" class="ti-edit-date" value="${oldDate}">
+      <input type="text" class="ti-edit-text" value="${escAttr(oldText)}" placeholder="编辑动态内容...">
+      <button class="ti-edit-save" data-idx="${updateIdx}">保存</button>
+      <button class="ti-edit-cancel" data-idx="${updateIdx}">取消</button>
+    </div>
+  `;
+
+  // 保存按钮
+  contentDiv.querySelector('.ti-edit-save').addEventListener('click', function() {
+    var newDate = contentDiv.querySelector('.ti-edit-date').value || oldDate;
+    var newContent = contentDiv.querySelector('.ti-edit-text').value.trim();
+    if (!newContent) return;
+
+    var key = p.id || '_idx_' + projectIdx;
+    var edits = getLocalEdits();
+    if (!edits[key]) edits[key] = {};
+
+    if (u.author === 'OA周报') {
+      // OA 条目：存储编辑版本
+      if (!edits[key]._editedOA) edits[key]._editedOA = {};
+      edits[key]._editedOA[oldText] = { date: newDate, content: newContent };
+    } else {
+      // 本地条目：修改 _localUpdates
+      if (edits[key]._localUpdates) {
+        for (var i = 0; i < edits[key]._localUpdates.length; i++) {
+          if (edits[key]._localUpdates[i].content === oldText) {
+            edits[key]._localUpdates[i].date = newDate;
+            edits[key]._localUpdates[i].content = newContent;
+            break;
+          }
+        }
+      }
+    }
+
+    saveLocalEdits(edits);
+    mergeLocalEdits();
+    openDetail(projectIdx);
+    renderAll();
+    showToast('动态已更新 ✓');
+  });
+
+  // 取消按钮
+  contentDiv.querySelector('.ti-edit-cancel').addEventListener('click', function() {
+    mergeLocalEdits();
+    openDetail(projectIdx);
+  });
+
+  // 回车保存
+  contentDiv.querySelector('.ti-edit-text').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') contentDiv.querySelector('.ti-edit-save').click();
+  });
+}
+
+function deleteUpdate(projectIdx, updateIdx) {
+  var p = projects[projectIdx];
+  var u = p.updates[updateIdx];
+  if (!u) return;
+
+  if (!confirm('确定删除这条动态吗？')) return;
+
+  var key = p.id || '_idx_' + projectIdx;
+  var edits = getLocalEdits();
+  if (!edits[key]) edits[key] = {};
+
+  if (u.author === 'OA周报') {
+    // OA 条目：标记为已删除
+    if (!edits[key]._deletedOA) edits[key]._deletedOA = [];
+    edits[key]._deletedOA.push(u.content);
+  } else {
+    // 本地条目：从 _localUpdates 移除
+    if (edits[key]._localUpdates) {
+      edits[key]._localUpdates = edits[key]._localUpdates.filter(function(loc) {
+        return loc.content !== u.content;
+      });
+    }
+  }
+
+  saveLocalEdits(edits);
+  mergeLocalEdits();
+  openDetail(projectIdx);
+  renderAll();
+  showToast('动态已删除 ✓');
 }
 
 function closeDetail() {

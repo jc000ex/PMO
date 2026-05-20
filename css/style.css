@@ -700,7 +700,35 @@ body {
   transition: background var(--transition);
 }
 .timeline-date { font-size: 12px; color: var(--text-500); }
-.timeline-content { color: var(--text-700); margin-top: 2px; }
+.timeline-content { color: var(--text-700); margin-top: 2px; display: flex; align-items: flex-start; gap: 8px; }
+.timeline-content .ti-text { flex: 1; }
+/* 编辑删除按钮 */
+.ti-actions { display: flex; gap: 4px; opacity: 0; transition: opacity 0.15s; flex-shrink: 0; }
+.timeline-item:hover .ti-actions { opacity: 1; }
+.ti-btn {
+  background: none; border: 1px solid var(--border); border-radius: 4px;
+  cursor: pointer; font-size: 13px; padding: 2px 6px; color: var(--text-500);
+  transition: all 0.15s; line-height: 1.4;
+}
+.ti-btn:hover { border-color: var(--primary); color: var(--primary); background: rgba(59,130,246,0.06); }
+.ti-btn.ti-del:hover { border-color: var(--red); color: var(--red); background: rgba(239,68,68,0.06); }
+/* 行内编辑表单 */
+.ti-edit-form { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; flex: 1; }
+.ti-edit-date {
+  padding: 3px 6px; border: 1px solid var(--border); border-radius: 4px;
+  font-size: 13px; background: var(--bg); color: var(--text-700);
+}
+.ti-edit-text {
+  flex: 1; min-width: 180px; padding: 4px 8px; border: 1px solid var(--border);
+  border-radius: 4px; font-size: 13px; background: var(--bg); color: var(--text-700);
+}
+.ti-edit-save, .ti-edit-cancel {
+  padding: 3px 10px; border-radius: 4px; font-size: 12px; cursor: pointer; border: 1px solid transparent;
+}
+.ti-edit-save { background: var(--primary); color: #fff; }
+.ti-edit-save:hover { opacity: 0.85; }
+.ti-edit-cancel { background: var(--bg); color: var(--text-600); border-color: var(--border); }
+.ti-edit-cancel:hover { background: var(--border); }
 
 .risk-list { display: flex; flex-direction: column; gap: 8px; }
 .risk-item {
