@@ -11,21 +11,25 @@ const STORAGE_KEY = 'pmo_project_edits';
 // ===== GitHub API 直接持久化（跳过 Vercel）=====
 var _syncTimer = null;
 
-function syncToServer() {
-  // 需要 config.js 中的 GITHUB_TOKEN
-  if (typeof GITHUB_TOKEN === 'undefined' || !GITHUB_TOKEN) {
-    console.log('GITHUB_TOKEN 未配置，跳过同步（数据仍在 localStorage）');
-    return;
-  }
-  // 防抖：连续操作只发一次请求
-  if (_syncTimer) clearTimeout(_syncTimer);
-  _syncTimer = setTimeout(doSync, 2000);
+function getToken() {
+  // 优先用 config.js 的变量，其次用 localStorage 的
+  if (typeof GITHUB_TOKEN !== 'undefined' && GITHUB_TOKEN) return GITHUB_TOKEN;
+  return localStorage.getItem('pmo_github_token') || '';
 }
 
-async function doSync() {
+function syncToServer() {
+  var token = getToken();
+  if (!token) {
+    console.log('GitHub Token 未配置，跳过同步（数据仍在 localStorage）');
+    return;
+  }
+  if (_syncTimer) clearTimeout(_syncTimer);
+  _syncTimer = setTimeout(function() { doSync(token); }, 2000);
+}
+
+async function doSync(token) {
   _syncTimer = null;
   try {
-    // 构建干净的完整项目列表
     var clean = projects.map(function(p) {
       var c = { ...p };
       delete c._localUpdates;
@@ -40,7 +44,7 @@ async function doSync() {
     // 先获取当前文件的 sha
     var getRes = await fetch(GITHUB_API + '?ref=main', {
       headers: {
-        Authorization: 'Bearer ' + GITHUB_TOKEN,
+        Authorization: 'Bearer ' + token,
         Accept: 'application/vnd.github+json'
       }
     });
@@ -52,7 +56,7 @@ async function doSync() {
     var putRes = await fetch(GITHUB_API, {
       method: 'PUT',
       headers: {
-        Authorization: 'Bearer ' + GITHUB_TOKEN,
+        Authorization: 'Bearer ' + token,
         'Content-Type': 'application/json',
         Accept: 'application/vnd.github+json'
       },
@@ -81,6 +85,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // 主题初始化
   initTheme();
   loadProjects();
+  initTokenUI();
 
   // 视图切换
   document.querySelectorAll('.vt-btn').forEach(btn => {
@@ -129,7 +134,11 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btnNewSave').addEventListener('click', saveNewProject);
   document.getElementById('modalNew').addEventListener('click', e => { if (e.target === e.currentTarget) closeNewProject(); });
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') { closeDetail(); closeEdit(); closeNewProject(); }
+    if (e.key === 'Escape') {
+      closeDetail(); closeEdit(); closeNewProject();
+      var mt = document.getElementById('modalToken');
+      if (mt && mt.classList.contains('open')) { mt.classList.remove('open'); document.body.style.overflow = ''; }
+    }
   });
 });
 
@@ -1123,5 +1132,59 @@ function applyTheme(theme) {
   document.documentElement.setAttribute('data-theme', theme);
   document.querySelectorAll('.theme-toggle span').forEach(s => {
     s.classList.toggle('active', s.dataset.themeVal === theme);
+  });
+}
+
+// ===== Token 设置 =====
+function initTokenUI() {
+  var btnSettings = document.getElementById('btnSettings');
+  var tokenClose = document.getElementById('tokenClose');
+  var btnTokenCancel = document.getElementById('btnTokenCancel');
+  var btnTokenSave = document.getElementById('btnTokenSave');
+  var tokenInput = document.getElementById('tokenInput');
+  var tokenStatus = document.getElementById('tokenStatus');
+  var modal = document.getElementById('modalToken');
+
+  if (!btnSettings) return;
+
+  // 初始化：显示已有 token 状态
+  var existing = getToken();
+  if (existing) {
+    btnSettings.style.color = 'var(--green)';
+    btnSettings.title = 'GitHub Token 已配置';
+  }
+
+  btnSettings.addEventListener('click', function() {
+    var t = getToken();
+    tokenInput.value = t;
+    tokenStatus.textContent = t ? '✅ Token 已配置（重新输入将覆盖）' : '';
+    modal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  });
+
+  function closeTokenModal() {
+    modal.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  tokenClose.addEventListener('click', closeTokenModal);
+  btnTokenCancel.addEventListener('click', closeTokenModal);
+  modal.addEventListener('click', function(e) {
+    if (e.target === modal) closeTokenModal();
+  });
+
+  btnTokenSave.addEventListener('click', function() {
+    var val = tokenInput.value.trim();
+    if (!val) {
+      tokenStatus.textContent = '⚠ 请输入有效的 Token';
+      tokenStatus.style.color = 'var(--red)';
+      return;
+    }
+    localStorage.setItem('pmo_github_token', val);
+    tokenStatus.textContent = '✅ Token 已保存，数据将自动同步到 GitHub';
+    tokenStatus.style.color = 'var(--green)';
+    btnSettings.style.color = 'var(--green)';
+    btnSettings.title = 'GitHub Token 已配置';
+    setTimeout(closeTokenModal, 800);
   });
 }

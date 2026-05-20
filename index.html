@@ -145,5 +145,25 @@
 <script>
 if (sessionStorage.getItem('pmo_auth') !== '1') { window.location.replace('login.html'); }
 </script><script src="js/config.js"></script><script src="js/app.js"></script>
+
+<!-- Token 设置弹窗 -->
+<div class="modal-overlay" id="modalToken">
+  <div class="modal" style="max-width:460px">
+    <div class="modal-header">
+      <h2>设置 GitHub Token</h2>
+      <button class="modal-close" id="tokenClose">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--text-500);margin-bottom:12px">输入 GitHub Personal Access Token 以启用数据自动保存。Token 仅存储在你的浏览器中，不会上传。</p>
+      <input type="password" id="tokenInput" placeholder="ghp_..." style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;font-size:14px;background:var(--bg);color:var(--text-700)">
+      <div style="margin-top:12px;display:flex;gap:8px;justify-content:flex-end">
+        <button class="btn-cancel" id="btnTokenCancel">取消</button>
+        <button class="btn-save" id="btnTokenSave">保存</button>
+      </div>
+      <div id="tokenStatus" style="margin-top:8px;font-size:12px;color:var(--green)"></div>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>

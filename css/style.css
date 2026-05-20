@@ -208,6 +208,21 @@ body {
 }
 .btn-export:hover { background: var(--green); color: #fff; }
 
+/* 设置按钮 */
+.btn-settings {
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text-500);
+  font-size: 15px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all var(--transition-fast);
+  line-height: 1;
+}
+.btn-settings:hover { border-color: var(--primary); color: var(--primary); }
+
 .btn-new-project {
   padding: 6px 14px;
   border: 1px solid var(--primary);
