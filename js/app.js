@@ -8,6 +8,46 @@ let sortDir = 0;              // 编号排序：0=默认，1=升序，-1=降序
 // ===== localStorage 键 =====
 const STORAGE_KEY = 'pmo_project_edits';
 
+// ===== Vercel API（数据持久化到 GitHub）=====
+const API_URL = 'https://pmo-dashboard.vercel.app/api/save';
+// 部署后替换为你的 Vercel 域名
+
+var _syncTimer = null;
+
+function syncToServer() {
+  // 防抖：连续操作只发一次请求
+  if (_syncTimer) clearTimeout(_syncTimer);
+  _syncTimer = setTimeout(doSync, 2000);
+}
+
+async function doSync() {
+  _syncTimer = null;
+  try {
+    var clean = projects.map(function(p) {
+      var c = { ...p };
+      delete c._localUpdates;
+      delete c._deletedOA;
+      delete c._editedOA;
+      delete c._isLocal;
+      return c;
+    });
+    var res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ projects: clean })
+    });
+    if (!res.ok) {
+      var err = await res.json().catch(function() { return {}; });
+      throw new Error(err.error || 'HTTP ' + res.status);
+    }
+    localStorage.removeItem(STORAGE_KEY);
+    showToast('数据已同步到服务器 ✓');
+  } catch (err) {
+    console.error('同步失败:', err);
+    showToast('⚠ 同步失败，数据暂存本地');
+  }
+}
+
 // ===== 初始化 =====
 document.addEventListener('DOMContentLoaded', () => {
   // 主题初始化
@@ -138,6 +178,38 @@ function mergeLocalEdits() {
     if (cloned.updates) cloned.updates = sortUpdates(cloned.updates.slice());
     return cloned;
   });
+
+  // 追加仅存在于本地的项目（用户在网页新建的）
+  if (edits._localProjects && edits._localProjects.length > 0) {
+    projects = projects.concat(edits._localProjects.map(function(lp) {
+      var key = lp.id;
+      var merged = { ...lp };
+      // 应用用户对该项目的编辑（如果有）
+      if (edits[key]) {
+        merged = { ...merged, ...edits[key] };
+        var allU = (lp.updates || []).slice();
+        if (edits[key]._localUpdates) {
+          allU = allU.concat(edits[key]._localUpdates);
+        }
+        if (edits[key]._deletedOA) {
+          allU = allU.filter(function(u) { return edits[key]._deletedOA.indexOf(u.content) === -1; });
+        }
+        if (edits[key]._editedOA) {
+          allU = allU.map(function(u) {
+            var edit = edits[key]._editedOA[u.content];
+            return edit ? { date: edit.date, content: edit.content, author: u.author } : u;
+          });
+        }
+        merged.updates = sortUpdates(allU);
+        delete merged._localUpdates;
+        delete merged._deletedOA;
+        delete merged._editedOA;
+      } else {
+        if (merged.updates) merged.updates = sortUpdates(merged.updates.slice());
+      }
+      return merged;
+    }));
+  }
 }
 
 // ===== 视图切换 =====
@@ -479,6 +551,7 @@ function addUpdate(idx) {
   openDetail(idx);
   renderAll();
   showToast('动态已添加 ✓');
+  syncToServer();
 }
 
 function editUpdate(projectIdx, updateIdx) {
@@ -534,6 +607,7 @@ function editUpdate(projectIdx, updateIdx) {
     openDetail(projectIdx);
     renderAll();
     showToast('动态已更新 ✓');
+    syncToServer();
   });
 
   // 取消按钮
@@ -577,6 +651,7 @@ function deleteUpdate(projectIdx, updateIdx) {
   openDetail(projectIdx);
   renderAll();
   showToast('动态已删除 ✓');
+  syncToServer();
 }
 
 function closeDetail() {
@@ -736,6 +811,7 @@ function saveEdit() {
   }
 
   showToast('项目信息已保存 ✓');
+  syncToServer();
 }
 
 function closeEdit() {
@@ -989,12 +1065,17 @@ function saveNewProject() {
   };
 
   projects.push(p);
-  const edits = getLocalEdits();
-  if (!edits[id]) edits[id] = {};
-  edits[id]._localUpdates = [];
+  var edits = getLocalEdits();
+  // 完整存储到本地项目列表（刷新不丢）
+  if (!edits._localProjects) edits._localProjects = [];
+  edits._localProjects.push(p);
+  // 清理旧的 per-project 编辑数据（如果有）
+  delete edits[id];
   saveLocalEdits(edits);
   closeNewProject(true);
   renderAll();
+  // 异步同步到服务器
+  syncToServer();
 }
 
 // ===== 主题切换 =====
