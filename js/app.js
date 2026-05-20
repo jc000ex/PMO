@@ -8,13 +8,15 @@ let sortDir = 0;              // 编号排序：0=默认，1=升序，-1=降序
 // ===== localStorage 键 =====
 const STORAGE_KEY = 'pmo_project_edits';
 
-// ===== Vercel API（数据持久化到 GitHub）=====
-const API_URL = 'https://pmo-dashboard.vercel.app/api/save';
-// 部署后替换为你的 Vercel 域名
-
+// ===== GitHub API 直接持久化（跳过 Vercel）=====
 var _syncTimer = null;
 
 function syncToServer() {
+  // 需要 config.js 中的 GITHUB_TOKEN
+  if (typeof GITHUB_TOKEN === 'undefined' || !GITHUB_TOKEN) {
+    console.log('GITHUB_TOKEN 未配置，跳过同步（数据仍在 localStorage）');
+    return;
+  }
   // 防抖：连续操作只发一次请求
   if (_syncTimer) clearTimeout(_syncTimer);
   _syncTimer = setTimeout(doSync, 2000);
@@ -23,6 +25,7 @@ function syncToServer() {
 async function doSync() {
   _syncTimer = null;
   try {
+    // 构建干净的完整项目列表
     var clean = projects.map(function(p) {
       var c = { ...p };
       delete c._localUpdates;
@@ -31,15 +34,40 @@ async function doSync() {
       delete c._isLocal;
       return c;
     });
-    var res = await fetch(API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ projects: clean })
+    var json = JSON.stringify(clean, null, 2) + '\n';
+    var content = btoa(unescape(encodeURIComponent(json)));
+
+    // 先获取当前文件的 sha
+    var getRes = await fetch(GITHUB_API + '?ref=main', {
+      headers: {
+        Authorization: 'Bearer ' + GITHUB_TOKEN,
+        Accept: 'application/vnd.github+json'
+      }
     });
-    if (!res.ok) {
-      var err = await res.json().catch(function() { return {}; });
-      throw new Error(err.error || 'HTTP ' + res.status);
+    if (!getRes.ok) throw new Error('读取文件失败: ' + getRes.status);
+    var fileInfo = await getRes.json();
+    var sha = fileInfo.sha;
+
+    // 提交更新
+    var putRes = await fetch(GITHUB_API, {
+      method: 'PUT',
+      headers: {
+        Authorization: 'Bearer ' + GITHUB_TOKEN,
+        'Content-Type': 'application/json',
+        Accept: 'application/vnd.github+json'
+      },
+      body: JSON.stringify({
+        message: 'Update projects.json via PMO dashboard',
+        content: content,
+        sha: sha,
+        branch: 'main'
+      })
+    });
+    if (!putRes.ok) {
+      var err = await putRes.json().catch(function() { return {}; });
+      throw new Error(err.message || 'HTTP ' + putRes.status);
     }
+
     localStorage.removeItem(STORAGE_KEY);
     showToast('数据已同步到服务器 ✓');
   } catch (err) {
