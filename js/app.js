@@ -8,7 +8,8 @@ let sortDir = 0;              // 编号排序：0=默认，1=升序，-1=降序
 // ===== localStorage 键 =====
 const STORAGE_KEY = 'pmo_project_edits';
 
-// ===== GitHub API 直接持久化（跳过 Vercel）=====
+// ===== GitHub API 直接持久化 =====
+var GITHUB_API_URL_URL = 'https://api.github.com/repos/jc000ex/PMO/contents/data/projects.json';
 var _syncTimer = null;
 
 function getToken() {
@@ -42,7 +43,7 @@ async function doSync(token) {
     var content = btoa(unescape(encodeURIComponent(json)));
 
     // 先获取当前文件的 sha
-    var getRes = await fetch(GITHUB_API + '?ref=main', {
+    var getRes = await fetch(GITHUB_API_URL + '?ref=main', {
       headers: {
         Authorization: 'Bearer ' + token,
         Accept: 'application/vnd.github+json'
@@ -53,7 +54,7 @@ async function doSync(token) {
     var sha = fileInfo.sha;
 
     // 提交更新
-    var putRes = await fetch(GITHUB_API, {
+    var putRes = await fetch(GITHUB_API_URL, {
       method: 'PUT',
       headers: {
         Authorization: 'Bearer ' + token,
