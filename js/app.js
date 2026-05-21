@@ -9,7 +9,7 @@ let sortDir = 0;              // 编号排序：0=默认，1=升序，-1=降序
 const STORAGE_KEY = 'pmo_project_edits';
 
 // ===== GitHub API 直接持久化 =====
-var GITHUB_API_URL_URL = 'https://api.github.com/repos/jc000ex/PMO/contents/data/projects.json';
+var GITHUB_API_URL = 'https://api.github.com/repos/jc000ex/PMO/contents/data/projects.json';
 var _syncTimer = null;
 
 function getToken() {
@@ -73,7 +73,13 @@ async function doSync(token) {
       throw new Error(err.message || 'HTTP ' + putRes.status);
     }
 
-    localStorage.removeItem(STORAGE_KEY);
+    // 只保留 _localProjects 作为备份（Pages 部署有延迟），清除其余编辑数据
+    var keep = {};
+    var edits = getLocalEdits();
+    if (edits._localProjects && edits._localProjects.length > 0) {
+      keep._localProjects = edits._localProjects;
+    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(keep));
     showToast('数据已同步到服务器 ✓');
   } catch (err) {
     console.error('同步失败:', err);
@@ -217,9 +223,11 @@ function mergeLocalEdits() {
     return cloned;
   });
 
-  // 追加仅存在于本地的项目（用户在网页新建的）
+  // 追加仅存在于本地的项目（用户在网页新建的），去重：排除已存在于原始数据的
   if (edits._localProjects && edits._localProjects.length > 0) {
-    projects = projects.concat(edits._localProjects.map(function(lp) {
+    var existingIds = new Set(projects.map(function(p) { return p.id; }));
+    var uniqueLocals = edits._localProjects.filter(function(lp) { return !existingIds.has(lp.id); });
+    projects = projects.concat(uniqueLocals.map(function(lp) {
       var key = lp.id;
       var merged = { ...lp };
       // 应用用户对该项目的编辑（如果有）
@@ -247,6 +255,17 @@ function mergeLocalEdits() {
       }
       return merged;
     }));
+  }
+
+  // 清理 _localProjects 中已在原始数据存在的项目（Pages 已部署，备份不再需要）
+  if (edits._localProjects && edits._localProjects.length > 0) {
+    var origIds = new Set(originalProjects.map(function(p) { return p.id; }));
+    var cleaned = edits._localProjects.filter(function(lp) { return !origIds.has(lp.id); });
+    if (cleaned.length !== edits._localProjects.length) {
+      edits._localProjects = cleaned.length > 0 ? cleaned : undefined;
+      if (cleaned.length === 0) delete edits._localProjects;
+      saveLocalEdits(edits);
+    }
   }
 }
 
@@ -502,7 +521,7 @@ function openDetail(idx) {
             <button class="btn-add" id="btnAddUpdate">添加</button>
           </div>
           ${p.updates && p.updates.length > 0 ? `
-            <div class="timeline" id="detailTimeline" style="margin-top:14px">
+            <div class="timeline" id="detailTimeline" data-project-idx="${idx}" style="margin-top:14px">
               ${p.updates.map((u,i) => `
                 <div class="timeline-item" data-source="${u.author === 'OA周报' ? 'oa' : 'daily'}" data-update-idx="${i}">
                   <div class="timeline-date">${esc(u.date || '')} · ${esc(u.author || '')}</div>
@@ -543,7 +562,7 @@ function openDetail(idx) {
     });
   });
 
-  // 绑定编辑/删除按钮（事件委托）
+  // 绑定编辑/删除按钮（事件委托，从 dataset 读取 projectIdx，避免闭包过时）
   var timeline = document.getElementById('detailTimeline');
   if (timeline) {
     timeline.addEventListener('click', function(e) {
@@ -551,10 +570,11 @@ function openDetail(idx) {
       if (!btn) return;
       var action = btn.dataset.action;
       var updateIdx = parseInt(btn.dataset.idx);
+      var projectIdx = parseInt(timeline.dataset.projectIdx);
       if (action === 'edit') {
-        editUpdate(idx, updateIdx);
+        editUpdate(projectIdx, updateIdx);
       } else if (action === 'delete') {
-        deleteUpdate(idx, updateIdx);
+        deleteUpdate(projectIdx, updateIdx);
       }
     });
   }
