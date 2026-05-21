@@ -388,8 +388,10 @@ body {
 }
 .th-no { width: 48px; text-align: center !important; }
 .td-no { text-align: center; color: var(--text-300); font-size: 13px; }
-.project-table th:nth-child(3) { cursor: pointer; user-select: none; }
-.project-table th:nth-child(3):hover { color: var(--primary); }
+.project-table th:nth-child(3),
+.project-table th:nth-child(6) { cursor: pointer; user-select: none; }
+.project-table th:nth-child(3):hover,
+.project-table th:nth-child(6):hover { color: var(--primary); }
 .sort-icon {
   display: inline-block; font-size: 10px; margin-left: 2px;
   color: var(--primary); vertical-align: middle;

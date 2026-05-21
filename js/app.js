@@ -4,6 +4,7 @@ let projects = [];           // 合并localStorage后的数据
 let currentView = 'list';    // 'list' | 'card'
 let currentDetailIdx = -1;   // 当前打开详情的项目索引
 let sortDir = 0;              // 编号排序：0=默认，1=升序，-1=降序
+let sortPriorityDir = 0;      // 优先级排序：0=默认，1=低→高，-1=高→低
 
 // ===== localStorage 键 =====
 const STORAGE_KEY = 'pmo_project_edits';
@@ -129,6 +130,15 @@ document.addEventListener('DOMContentLoaded', () => {
   // 编号排序
   document.querySelector('.project-table th:nth-child(3)').addEventListener('click', () => {
     sortDir = sortDir === 1 ? -1 : sortDir === -1 ? 0 : 1;
+    sortPriorityDir = 0;
+    updateSortIcon();
+    renderList();
+    if (currentView === 'card') renderCards();
+  });
+  // 优先级排序
+  document.querySelector('.project-table th:nth-child(6)').addEventListener('click', () => {
+    sortPriorityDir = sortPriorityDir === 1 ? -1 : sortPriorityDir === -1 ? 0 : 1;
+    sortDir = 0;
     updateSortIcon();
     renderList();
     if (currentView === 'card') renderCards();
@@ -358,6 +368,16 @@ function renderList() {
       const na = parseInt((a.id || '-').replace(/[^0-9]/g, '')) || 0;
       const nb = parseInt((b.id || '-').replace(/[^0-9]/g, '')) || 0;
       return sortDir === 1 ? na - nb : nb - na;
+    });
+  }
+
+  // 优先级排序
+  if (sortPriorityDir !== 0) {
+    const priorityOrder = { '紧急': 3, '高': 2, '中': 1, '低': 0 };
+    filtered = filtered.slice().sort((a, b) => {
+      const pa = priorityOrder[a.priority] ?? -1;
+      const pb = priorityOrder[b.priority] ?? -1;
+      return sortPriorityDir === 1 ? pa - pb : pb - pa;
     });
   }
 
@@ -979,13 +999,20 @@ function renderChangeLogTable(rows) {
     `).join('')}</tbody></table>`;
 }
 
-// ===== 编号排序图标 =====
+// ===== 排序图标 =====
 function updateSortIcon() {
-  const icon = document.getElementById('sortIdIcon');
-  if (!icon) return;
-  if (sortDir === 1) icon.textContent = '▲';
-  else if (sortDir === -1) icon.textContent = '▼';
-  else icon.textContent = '';
+  var idIcon = document.getElementById('sortIdIcon');
+  var prIcon = document.getElementById('sortPriorityIcon');
+  if (idIcon) {
+    if (sortDir === 1) idIcon.textContent = '▲';
+    else if (sortDir === -1) idIcon.textContent = '▼';
+    else idIcon.textContent = '';
+  }
+  if (prIcon) {
+    if (sortPriorityDir === 1) prIcon.textContent = '▲';
+    else if (sortPriorityDir === -1) prIcon.textContent = '▼';
+    else prIcon.textContent = '';
+  }
 }
 
 // ===== 新增项目 =====
