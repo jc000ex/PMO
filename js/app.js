@@ -136,13 +136,16 @@ document.addEventListener('DOMContentLoaded', () => {
     if (currentView === 'card') renderCards();
   });
   // 优先级排序
-  document.querySelector('.project-table th:nth-child(6)').addEventListener('click', () => {
-    sortPriorityDir = sortPriorityDir === 1 ? -1 : sortPriorityDir === -1 ? 0 : 1;
-    sortDir = 0;
-    updateSortIcon();
-    renderList();
-    if (currentView === 'card') renderCards();
-  });
+  var thPriority = document.getElementById('thPriority');
+  if (thPriority) {
+    thPriority.addEventListener('click', function() {
+      sortPriorityDir = sortPriorityDir === 1 ? -1 : sortPriorityDir === -1 ? 0 : 1;
+      sortDir = 0;
+      updateSortIcon();
+      renderList();
+      if (currentView === 'card') renderCards();
+    });
+  }
   updateSortIcon();
   // 新增项目
   document.getElementById('btnNewProject').addEventListener('click', openNewProject);

@@ -43,7 +43,7 @@
 
 <!-- 筛选栏 -->
 <section class="filter-bar">
-  <input type="text" id="searchInput" class="search-box" placeholder="搜索项目名称、编号、客户..." autocomplete="off">
+  <input type="text" id="searchInput" class="search-box" placeholder="搜索项目名称、编号、客户..." autocomplete="off" readonly onfocus="this.removeAttribute('readonly')">
   <div class="filter-selects">
     <div class="fs-item">
       <label>阶段</label>
@@ -78,7 +78,7 @@
         <th>编号 <span class="sort-icon" id="sortIdIcon"></span></th>
         <th>阶段</th>
         <th>状态</th>
-        <th>优先级 <span class="sort-icon" id="sortPriorityIcon"></span></th>
+        <th id="thPriority">优先级 <span class="sort-icon" id="sortPriorityIcon"></span></th>
         <th>客户</th>
         <th>负责人</th>
         <th>计划交付</th>
