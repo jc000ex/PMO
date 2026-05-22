@@ -373,11 +373,12 @@ function renderList() {
 
   // 优先级排序
   if (sortPriorityDir !== 0) {
-    const priorityOrder = { '紧急': 3, '高': 2, '中': 1, '低': 0 };
-    filtered = filtered.slice().sort((a, b) => {
-      const pa = priorityOrder[a.priority] ?? -1;
-      const pb = priorityOrder[b.priority] ?? -1;
-      return sortPriorityDir === 1 ? pa - pb : pb - pa;
+    var priorityOrder = { '紧急': 3, '高': 2, '中': 1, '低': 0 };
+    var dir = sortPriorityDir;
+    filtered = filtered.slice().sort(function(a, b) {
+      var pa = priorityOrder.hasOwnProperty(a.priority) ? priorityOrder[a.priority] : -1;
+      var pb = priorityOrder.hasOwnProperty(b.priority) ? priorityOrder[b.priority] : -1;
+      return dir === 1 ? pa - pb : pb - pa;
     });
   }
 
