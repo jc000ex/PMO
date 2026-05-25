@@ -103,12 +103,19 @@ document.addEventListener('DOMContentLoaded', () => {
   // 搜索
   document.getElementById('searchInput').addEventListener('input', debounce(renderAll, 200));
   // 防止浏览器自动填充搜索框导致项目被过滤（Chrome 会忽略 autocomplete="off"）
+  // 策略：页面加载后反复清空搜索框并触发重新渲染
   var searchEl = document.getElementById('searchInput');
   if (searchEl) {
-    searchEl.value = '';
-    // 延迟再清一次，对付页面加载后才触发的自动填充
-    setTimeout(function() { searchEl.value = ''; }, 100);
-    setTimeout(function() { searchEl.value = ''; }, 500);
+    function clearSearch() {
+      if (searchEl.value) {
+        searchEl.value = '';
+        renderAll();
+      }
+    }
+    clearSearch();
+    setTimeout(clearSearch, 200);
+    setTimeout(clearSearch, 600);
+    setTimeout(clearSearch, 1200);
   }
 
   // 下拉筛选
