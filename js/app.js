@@ -102,6 +102,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 搜索
   document.getElementById('searchInput').addEventListener('input', debounce(renderAll, 200));
+  // 防止浏览器自动填充搜索框导致项目被过滤（Chrome 会忽略 autocomplete="off"）
+  var searchEl = document.getElementById('searchInput');
+  if (searchEl) {
+    searchEl.value = '';
+    // 延迟再清一次，对付页面加载后才触发的自动填充
+    setTimeout(function() { searchEl.value = ''; }, 100);
+    setTimeout(function() { searchEl.value = ''; }, 500);
+  }
 
   // 下拉筛选
   ['filterPhase', 'filterStatus', 'filterPriority', 'filterPm', 'filterCustomer'].forEach(id => {
@@ -1121,6 +1129,10 @@ function hasNewFormContent() {
 }
 
 function saveNewProject() {
+  // 清空搜索框，确保新建项目不会被浏览器的自动填充过滤掉
+  var searchInput = document.getElementById('searchInput');
+  if (searchInput) searchInput.value = '';
+
   const name = document.getElementById('newName').value.trim();
   const id = document.getElementById('newId').value.trim();
   if (!name) { alert('请填写项目名称'); return; }

@@ -688,5 +688,31 @@
     "riskPlan": [],
     "changeLog": [],
     "summary": ""
+  },
+  {
+    "id": "JC-JS-001",
+    "name": "机场低空反无共建产品",
+    "phase": "售前",
+    "status": "进行中",
+    "priority": "高",
+    "customer": "",
+    "pm": "",
+    "startDate": "",
+    "endDate": "",
+    "actualEndDate": "",
+    "members": "",
+    "businessPhase": false,
+    "businessProgress": "",
+    "currentFocus": "",
+    "milestones": [],
+    "updates": [],
+    "background": "低空无人机反无产品，机场共建项目",
+    "objectives": "",
+    "scope": "",
+    "acceptanceCriteria": "",
+    "stakeholders": [],
+    "riskPlan": [],
+    "changeLog": [],
+    "summary": ""
   }
 ]
