@@ -74,13 +74,9 @@ async function doSync(token) {
       throw new Error(err.message || 'HTTP ' + putRes.status);
     }
 
-    // 只保留 _localProjects 作为备份（Pages 部署有延迟），清除其余编辑数据
-    var keep = {};
-    var edits = getLocalEdits();
-    if (edits._localProjects && edits._localProjects.length > 0) {
-      keep._localProjects = edits._localProjects;
-    }
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(keep));
+    // 同步成功后更新 originalProjects 为最新数据，作为内存基准
+    // 不再清空 localStorage，避免 Pages 部署延迟期间数据丢失
+    originalProjects = clean;
     showToast('数据已同步到服务器 ✓');
   } catch (err) {
     console.error('同步失败:', err);
@@ -217,17 +213,27 @@ function sortUpdates(updates) {
   });
 }
 
+// 将本地更新合并到已有更新列表，按内容去重（避免同步后重复）
+function mergeUpdates(baseUpdates, localUpdates) {
+  if (!localUpdates || localUpdates.length === 0) return (baseUpdates || []).slice();
+  var existingContents = new Set((baseUpdates || []).map(function(u) { return u.content; }));
+  var all = (baseUpdates || []).slice();
+  for (var i = 0; i < localUpdates.length; i++) {
+    if (!existingContents.has(localUpdates[i].content)) {
+      all.push(localUpdates[i]);
+    }
+  }
+  return sortUpdates(all);
+}
+
 function mergeLocalEdits() {
   var edits = getLocalEdits();
   projects = originalProjects.map(function(p, i) {
     var key = p.id || '_idx_' + i;
     if (edits[key]) {
       var merged = { ...p, ...edits[key] };
-      // 构建完整 updates 列表：JSON原始 + 本地添加
-      var allUpdates = (p.updates || []).slice();
-      if (edits[key]._localUpdates) {
-        allUpdates = allUpdates.concat(edits[key]._localUpdates);
-      }
+      // 构建完整 updates 列表：JSON原始 + 本地添加（内容去重）
+      var allUpdates = mergeUpdates(p.updates, edits[key]._localUpdates);
       // 应用 OA 条目的编辑/删除（存储在 localStorage 中）
       if (edits[key]._deletedOA) {
         allUpdates = allUpdates.filter(function(u) {
@@ -240,7 +246,7 @@ function mergeLocalEdits() {
           return edit ? { date: edit.date, content: edit.content, author: u.author } : u;
         });
       }
-      merged.updates = sortUpdates(allUpdates);
+      merged.updates = allUpdates;
       delete merged._localUpdates;
       delete merged._deletedOA;
       delete merged._editedOA;
@@ -261,10 +267,7 @@ function mergeLocalEdits() {
       // 应用用户对该项目的编辑（如果有）
       if (edits[key]) {
         merged = { ...merged, ...edits[key] };
-        var allU = (lp.updates || []).slice();
-        if (edits[key]._localUpdates) {
-          allU = allU.concat(edits[key]._localUpdates);
-        }
+        var allU = mergeUpdates(lp.updates, edits[key]._localUpdates);
         if (edits[key]._deletedOA) {
           allU = allU.filter(function(u) { return edits[key]._deletedOA.indexOf(u.content) === -1; });
         }
