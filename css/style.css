@@ -851,6 +851,7 @@ body {
   background: var(--text); color: #fff;
   padding: 10px 24px; border-radius: 20px;
   font-size: 14px; z-index: 999;
+  max-width: calc(100vw - 32px); text-align: center;
   opacity: 0; transition: opacity var(--transition);
   pointer-events: none;
 }

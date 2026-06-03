@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>国科项目管理仪表板</title>
-<link rel="stylesheet" href="css/style.css?v=20260603-contract-status">
+<link rel="stylesheet" href="css/style.css?v=20260603-edit-sync-fix">
 </head>
 <body>
 
@@ -160,7 +160,7 @@
 
 <script>
 if (sessionStorage.getItem('pmo_auth') !== '1') { window.location.replace('login.html'); }
-</script><script src="js/config.js"></script><script src="js/app.js?v=20260603-contract-status"></script>
+</script><script src="js/config.js"></script><script src="js/app.js?v=20260603-edit-sync-fix"></script>
 
 <!-- Token 设置弹窗 -->
 <div class="modal-overlay" id="modalToken">
@@ -170,7 +170,7 @@ if (sessionStorage.getItem('pmo_auth') !== '1') { window.location.replace('login
       <button class="modal-close" id="tokenClose">&times;</button>
     </div>
     <div class="modal-body">
-      <p style="font-size:13px;color:var(--text-500);margin-bottom:12px">通常会优先通过服务器自动保存。若服务器同步不可用，可输入 GitHub Personal Access Token 作为备用同步方式；Token 仅存储在你的浏览器中。</p>
+      <p style="font-size:13px;color:var(--text-500);margin-bottom:12px">GitHub Pages 线上手动保存需要 GitHub Personal Access Token 才能同步到仓库；未配置时数据只会暂存在当前浏览器。Token 仅存储在你的浏览器中。</p>
       <input type="password" id="tokenInput" name="pmo-github-access-token" placeholder="ghp_..." autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true" data-form-type="other" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;font-size:14px;background:var(--bg);color:var(--text-700)">
       <div style="margin-top:12px;display:flex;gap:8px;justify-content:flex-end">
         <button class="btn-cancel" id="btnTokenCancel">取消</button>

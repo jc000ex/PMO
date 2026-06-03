@@ -10,7 +10,7 @@ let sortPriorityDir = -1;     // 优先级排序：默认紧急→低，1=低→
 const STORAGE_KEY = 'pmo_project_edits';
 
 // ===== GitHub API 直接持久化 =====
-var APP_VERSION = '20260603-contract-status';
+var APP_VERSION = '20260603-edit-sync-fix';
 var GITHUB_API_URL = 'https://api.github.com/repos/jc000ex/PMO/contents/data/projects.json';
 var _syncTimer = null;
 
@@ -60,6 +60,14 @@ function getContractStatus(p) {
 function syncToServer() {
   if (_syncTimer) clearTimeout(_syncTimer);
   _syncTimer = setTimeout(doSync, 2000);
+}
+
+function isStaticSaveHost() {
+  var host = window.location.hostname;
+  return window.location.protocol === 'file:' ||
+    host === '127.0.0.1' ||
+    host === 'localhost' ||
+    host.endsWith('.github.io');
 }
 
 function getPersistableProjects() {
@@ -127,25 +135,34 @@ async function doSync() {
   var token = getToken();
   var serverError = null;
 
+  if (token) {
+    try {
+      await saveViaGitHub(clean, token);
+      originalProjects = clean;
+      showToast('数据已同步到 GitHub ✓');
+      return;
+    } catch (fallbackErr) {
+      console.error('浏览器 Token 同步失败:', fallbackErr);
+      showToast('⚠ GitHub 同步失败，已暂存本地');
+      return;
+    }
+  }
+
+  if (isStaticSaveHost()) {
+    console.log('静态页面未配置 GitHub Token，数据暂存在 localStorage');
+    showToast('⚠ 已保存到当前浏览器，未同步线上');
+    return;
+  }
+
   try {
     await saveViaServer(clean);
   } catch (err) {
     serverError = err;
     console.warn('服务端同步不可用，尝试浏览器 Token 同步:', err);
 
-    if (!token) {
-      console.log('GitHub Token 未配置，数据暂存在 localStorage');
-      showToast('⚠ 服务器同步不可用，数据暂存本地');
-      return;
-    }
-
-    try {
-      await saveViaGitHub(clean, token);
-    } catch (fallbackErr) {
-      console.error('浏览器 Token 同步也失败:', fallbackErr);
-      showToast('⚠ 同步失败，数据暂存本地');
-      return;
-    }
+    console.log('GitHub Token 未配置，数据暂存在 localStorage');
+    showToast('⚠ 服务器同步不可用，已暂存本地');
+    return;
   }
 
   // 同步成功后更新 originalProjects 为最新数据，作为内存基准
@@ -178,11 +195,11 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('modalDetail').addEventListener('click', e => {
     if (e.target === e.currentTarget) closeDetail();
   });
-  document.getElementById('editClose').addEventListener('click', closeEdit);
+  document.getElementById('editClose').addEventListener('click', requestCloseEdit);
   document.getElementById('modalEdit').addEventListener('click', e => {
-    if (e.target === e.currentTarget) closeEdit();
+    if (e.target === e.currentTarget) e.stopPropagation();
   });
-  document.getElementById('btnEditCancel').addEventListener('click', closeEdit);
+  document.getElementById('btnEditCancel').addEventListener('click', requestCloseEdit);
   document.getElementById('btnEditSave').addEventListener('click', saveEdit);
   document.getElementById('btnEditDetail').addEventListener('click', () => {
     if (currentDetailIdx >= 0) openEdit(currentDetailIdx);
@@ -220,9 +237,11 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('modalNew').addEventListener('click', e => { if (e.target === e.currentTarget) closeNewProject(); });
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
-      closeDetail(); closeEdit(); closeNewProject();
       var mt = document.getElementById('modalToken');
-      if (mt && mt.classList.contains('open')) { mt.classList.remove('open'); document.body.style.overflow = ''; }
+      if (mt && mt.classList.contains('open')) { mt.classList.remove('open'); document.body.style.overflow = ''; return; }
+      if (document.getElementById('modalEdit').classList.contains('open')) { requestCloseEdit(); return; }
+      if (document.getElementById('modalNew').classList.contains('open')) { closeNewProject(); return; }
+      if (document.getElementById('modalDetail').classList.contains('open')) closeDetail();
     }
   });
 });
@@ -990,7 +1009,31 @@ function openEdit(idx) {
   `;
 
   document.getElementById('modalEdit').classList.add('open');
+  document.getElementById('modalEdit').dataset.initialSnapshot = getEditFormSnapshot();
   document.body.style.overflow = 'hidden';
+}
+
+function getEditFormSnapshot() {
+  var ids = [
+    'editName', 'editId', 'editPhase', 'editStatus', 'editPriority', 'editContractStatus',
+    'editCustomer', 'editPm', 'editStartDate', 'editEndDate', 'editBg', 'editObj',
+    'editScope', 'editAccept', 'editStakeholders', 'editRiskPlan', 'editChangeLog',
+    'editBizProgress'
+  ];
+  return JSON.stringify(ids.map(function(id) {
+    var el = document.getElementById(id);
+    return el ? el.value : '';
+  }));
+}
+
+function hasEditFormChanges() {
+  var modal = document.getElementById('modalEdit');
+  return modal.classList.contains('open') && modal.dataset.initialSnapshot !== getEditFormSnapshot();
+}
+
+function requestCloseEdit() {
+  if (hasEditFormChanges() && !confirm('编辑内容尚未保存，确定要关闭吗？')) return;
+  closeEdit();
 }
 
 function saveEdit() {
