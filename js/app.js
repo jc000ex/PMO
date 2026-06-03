@@ -4,12 +4,13 @@ let projects = [];           // 合并localStorage后的数据
 let currentView = 'list';    // 'list' | 'card'
 let currentDetailIdx = -1;   // 当前打开详情的项目索引
 let sortDir = 0;              // 编号排序：0=默认，1=升序，-1=降序
-let sortPriorityDir = 0;      // 优先级排序：0=默认，1=低→高，-1=高→低
+let sortPriorityDir = -1;     // 优先级排序：默认紧急→低，1=低→高，-1=高→低
 
 // ===== localStorage 键 =====
 const STORAGE_KEY = 'pmo_project_edits';
 
 // ===== GitHub API 直接持久化 =====
+var APP_VERSION = '20260603-priority-sort';
 var GITHUB_API_URL = 'https://api.github.com/repos/jc000ex/PMO/contents/data/projects.json';
 var _syncTimer = null;
 
@@ -19,69 +20,134 @@ function getToken() {
   return localStorage.getItem('pmo_github_token') || '';
 }
 
-function syncToServer() {
-  var token = getToken();
-  if (!token) {
-    console.log('GitHub Token 未配置，跳过同步（数据仍在 localStorage）');
-    return;
-  }
-  if (_syncTimer) clearTimeout(_syncTimer);
-  _syncTimer = setTimeout(function() { doSync(token); }, 2000);
+function normalizeProjectId(id) {
+  var val = String(id || '').trim();
+  return val && val !== '-' && val !== '--' ? val : '';
 }
 
-async function doSync(token) {
+function getProjectKey(p, idx) {
+  return normalizeProjectId(p && p.id) || '_idx_' + idx;
+}
+
+function getEditStorageKey(p, idx, edits) {
+  var currentKey = getProjectKey(p, idx);
+  if (!edits || edits[currentKey]) return currentKey;
+
+  var currentId = normalizeProjectId(p && p.id);
+  if (!currentId) return currentKey;
+
+  for (var key in edits) {
+    if (key.charAt(0) === '_') continue;
+    if (edits[key] && normalizeProjectId(edits[key].id) === currentId) {
+      return key;
+    }
+  }
+  return currentKey;
+}
+
+function hasDuplicateProjectId(id, exceptIdx) {
+  var normalized = normalizeProjectId(id);
+  if (!normalized) return false;
+  return projects.some(function(p, i) {
+    return i !== exceptIdx && normalizeProjectId(p.id) === normalized;
+  });
+}
+
+function syncToServer() {
+  if (_syncTimer) clearTimeout(_syncTimer);
+  _syncTimer = setTimeout(doSync, 2000);
+}
+
+function getPersistableProjects() {
+  return projects.map(function(p) {
+    var c = { ...p };
+    delete c._localUpdates;
+    delete c._deletedOA;
+    delete c._editedOA;
+    delete c._isLocal;
+    return c;
+  });
+}
+
+async function saveViaServer(cleanProjects) {
+  var res = await fetch('/api/save', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ projects: cleanProjects })
+  });
+  if (!res.ok) {
+    var err = await res.json().catch(function() { return {}; });
+    throw new Error(err.error || '服务端保存失败: HTTP ' + res.status);
+  }
+}
+
+async function saveViaGitHub(cleanProjects, token) {
+  var json = JSON.stringify(cleanProjects, null, 2) + '\n';
+  var content = btoa(unescape(encodeURIComponent(json)));
+
+  // 先获取当前文件的 sha
+  var getRes = await fetch(GITHUB_API_URL + '?ref=main', {
+    headers: {
+      Authorization: 'Bearer ' + token,
+      Accept: 'application/vnd.github+json'
+    }
+  });
+  if (!getRes.ok) throw new Error('读取文件失败: ' + getRes.status);
+  var fileInfo = await getRes.json();
+  var sha = fileInfo.sha;
+
+  // 提交更新
+  var putRes = await fetch(GITHUB_API_URL, {
+    method: 'PUT',
+    headers: {
+      Authorization: 'Bearer ' + token,
+      'Content-Type': 'application/json',
+      Accept: 'application/vnd.github+json'
+    },
+    body: JSON.stringify({
+      message: 'Update projects.json via PMO dashboard',
+      content: content,
+      sha: sha,
+      branch: 'main'
+    })
+  });
+  if (!putRes.ok) {
+    var err = await putRes.json().catch(function() { return {}; });
+    throw new Error(err.message || 'HTTP ' + putRes.status);
+  }
+}
+
+async function doSync() {
   _syncTimer = null;
+  var clean = getPersistableProjects();
+  var token = getToken();
+  var serverError = null;
+
   try {
-    var clean = projects.map(function(p) {
-      var c = { ...p };
-      delete c._localUpdates;
-      delete c._deletedOA;
-      delete c._editedOA;
-      delete c._isLocal;
-      return c;
-    });
-    var json = JSON.stringify(clean, null, 2) + '\n';
-    var content = btoa(unescape(encodeURIComponent(json)));
+    await saveViaServer(clean);
+  } catch (err) {
+    serverError = err;
+    console.warn('服务端同步不可用，尝试浏览器 Token 同步:', err);
 
-    // 先获取当前文件的 sha
-    var getRes = await fetch(GITHUB_API_URL + '?ref=main', {
-      headers: {
-        Authorization: 'Bearer ' + token,
-        Accept: 'application/vnd.github+json'
-      }
-    });
-    if (!getRes.ok) throw new Error('读取文件失败: ' + getRes.status);
-    var fileInfo = await getRes.json();
-    var sha = fileInfo.sha;
-
-    // 提交更新
-    var putRes = await fetch(GITHUB_API_URL, {
-      method: 'PUT',
-      headers: {
-        Authorization: 'Bearer ' + token,
-        'Content-Type': 'application/json',
-        Accept: 'application/vnd.github+json'
-      },
-      body: JSON.stringify({
-        message: 'Update projects.json via PMO dashboard',
-        content: content,
-        sha: sha,
-        branch: 'main'
-      })
-    });
-    if (!putRes.ok) {
-      var err = await putRes.json().catch(function() { return {}; });
-      throw new Error(err.message || 'HTTP ' + putRes.status);
+    if (!token) {
+      console.log('GitHub Token 未配置，数据暂存在 localStorage');
+      showToast('⚠ 服务器同步不可用，数据暂存本地');
+      return;
     }
 
-    // 同步成功后更新 originalProjects 为最新数据，作为内存基准
-    // 不再清空 localStorage，避免 Pages 部署延迟期间数据丢失
-    originalProjects = clean;
-    showToast('数据已同步到服务器 ✓');
-  } catch (err) {
-    console.error('同步失败:', err);
-    showToast('⚠ 同步失败，数据暂存本地');
+    try {
+      await saveViaGitHub(clean, token);
+    } catch (fallbackErr) {
+      console.error('浏览器 Token 同步也失败:', fallbackErr);
+      showToast('⚠ 同步失败，数据暂存本地');
+      return;
+    }
   }
+
+  // 同步成功后更新 originalProjects 为最新数据，作为内存基准
+  // 不再清空 localStorage，避免 Pages 部署延迟期间数据丢失
+  originalProjects = clean;
+  showToast(serverError ? '数据已通过浏览器 Token 同步 ✓' : '数据已同步到服务器 ✓');
 }
 
 // ===== 初始化 =====
@@ -96,23 +162,7 @@ document.addEventListener('DOMContentLoaded', () => {
     btn.addEventListener('click', () => switchView(btn.dataset.view));
   });
 
-  // 搜索
-  document.getElementById('searchInput').addEventListener('input', debounce(renderAll, 200));
-  // 防止浏览器自动填充搜索框导致项目被过滤（Chrome 会忽略 autocomplete="off"）
-  // 策略：页面加载后反复清空搜索框并触发重新渲染
-  var searchEl = document.getElementById('searchInput');
-  if (searchEl) {
-    function clearSearch() {
-      if (searchEl.value) {
-        searchEl.value = '';
-        renderAll();
-      }
-    }
-    clearSearch();
-    setTimeout(clearSearch, 200);
-    setTimeout(clearSearch, 600);
-    setTimeout(clearSearch, 1200);
-  }
+  initSearchInput();
 
   // 下拉筛选
   ['filterPhase', 'filterStatus', 'filterPriority', 'filterPm', 'filterCustomer'].forEach(id => {
@@ -122,11 +172,11 @@ document.addEventListener('DOMContentLoaded', () => {
   // 弹窗关闭
   document.getElementById('modalClose').addEventListener('click', closeDetail);
   document.getElementById('modalDetail').addEventListener('click', e => {
-    if (e.target === e.target.currentTarget) closeDetail();
+    if (e.target === e.currentTarget) closeDetail();
   });
   document.getElementById('editClose').addEventListener('click', closeEdit);
   document.getElementById('modalEdit').addEventListener('click', e => {
-    if (e.target === e.target.currentTarget) closeEdit();
+    if (e.target === e.currentTarget) closeEdit();
   });
   document.getElementById('btnEditCancel').addEventListener('click', closeEdit);
   document.getElementById('btnEditSave').addEventListener('click', saveEdit);
@@ -175,7 +225,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ===== 加载数据 =====
 function loadProjects() {
-  fetch('data/projects.json')
+  fetch('data/projects.json?v=' + encodeURIComponent(APP_VERSION), { cache: 'no-store' })
     .then(r => r.json())
     .then(data => {
       originalProjects = data;
@@ -186,7 +236,7 @@ function loadProjects() {
     })
     .catch(err => {
       document.getElementById('listTbody').innerHTML =
-        '<tr><td colspan="9" class="empty-state">数据加载失败，请检查 data/projects.json 文件</td></tr>';
+        '<tr><td colspan="10" class="empty-state">数据加载失败，请检查 data/projects.json 文件</td></tr>';
       console.error(err);
     });
 }
@@ -228,8 +278,9 @@ function mergeUpdates(baseUpdates, localUpdates) {
 
 function mergeLocalEdits() {
   var edits = getLocalEdits();
+  migrateLegacyPlaceholderIdEdits(edits);
   projects = originalProjects.map(function(p, i) {
-    var key = p.id || '_idx_' + i;
+    var key = getProjectKey(p, i);
     if (edits[key]) {
       var merged = { ...p, ...edits[key] };
       // 构建完整 updates 列表：JSON原始 + 本地添加（内容去重）
@@ -259,10 +310,13 @@ function mergeLocalEdits() {
 
   // 追加仅存在于本地的项目（用户在网页新建的），去重：排除已存在于原始数据的
   if (edits._localProjects && edits._localProjects.length > 0) {
-    var existingIds = new Set(projects.map(function(p) { return p.id; }));
-    var uniqueLocals = edits._localProjects.filter(function(lp) { return !existingIds.has(lp.id); });
+    var existingIds = new Set(projects.map(function(p) { return normalizeProjectId(p.id); }).filter(Boolean));
+    var uniqueLocals = edits._localProjects.filter(function(lp) {
+      var id = normalizeProjectId(lp.id);
+      return !id || !existingIds.has(id);
+    });
     projects = projects.concat(uniqueLocals.map(function(lp) {
-      var key = lp.id;
+      var key = normalizeProjectId(lp.id) || '_local_' + lp.name;
       var merged = { ...lp };
       // 应用用户对该项目的编辑（如果有）
       if (edits[key]) {
@@ -290,14 +344,39 @@ function mergeLocalEdits() {
 
   // 清理 _localProjects 中已在原始数据存在的项目（Pages 已部署，备份不再需要）
   if (edits._localProjects && edits._localProjects.length > 0) {
-    var origIds = new Set(originalProjects.map(function(p) { return p.id; }));
-    var cleaned = edits._localProjects.filter(function(lp) { return !origIds.has(lp.id); });
+    var origIds = new Set(originalProjects.map(function(p) { return normalizeProjectId(p.id); }).filter(Boolean));
+    var cleaned = edits._localProjects.filter(function(lp) {
+      var id = normalizeProjectId(lp.id);
+      return !id || !origIds.has(id);
+    });
     if (cleaned.length !== edits._localProjects.length) {
       edits._localProjects = cleaned.length > 0 ? cleaned : undefined;
       if (cleaned.length === 0) delete edits._localProjects;
       saveLocalEdits(edits);
     }
   }
+}
+
+function migrateLegacyPlaceholderIdEdits(edits) {
+  ['-', '--'].forEach(function(legacyKey) {
+    var legacy = edits[legacyKey];
+    if (!legacy) return;
+
+    var targetIdx = -1;
+    if (legacy.name) {
+      targetIdx = originalProjects.findIndex(function(p) {
+        return !normalizeProjectId(p.id) && p.name === legacy.name;
+      });
+    }
+
+    if (targetIdx >= 0) {
+      var targetKey = getProjectKey(originalProjects[targetIdx], targetIdx);
+      edits[targetKey] = { ...(edits[targetKey] || {}), ...legacy };
+    }
+
+    delete edits[legacyKey];
+    saveLocalEdits(edits);
+  });
 }
 
 // ===== 视图切换 =====
@@ -331,6 +410,65 @@ function getFilteredProjects() {
     }
     return true;
   });
+}
+
+function initSearchInput() {
+  var searchEl = document.getElementById('searchInput');
+  if (!searchEl) return;
+
+  var userHasInteracted = false;
+  var renderSearch = debounce(renderAll, 200);
+
+  function unlockSearch() {
+    userHasInteracted = true;
+    searchEl.removeAttribute('readonly');
+  }
+
+  function clearAutofilledSearch() {
+    if (userHasInteracted || !searchEl.value) return;
+    searchEl.value = '';
+    renderAll();
+  }
+
+  ['pointerdown', 'mousedown', 'click', 'focus', 'keydown'].forEach(function(eventName) {
+    searchEl.addEventListener(eventName, unlockSearch, { once: true });
+  });
+  searchEl.addEventListener('input', function() {
+    userHasInteracted = true;
+    renderSearch();
+  });
+
+  clearAutofilledSearch();
+  setTimeout(clearAutofilledSearch, 200);
+  setTimeout(clearAutofilledSearch, 600);
+  setTimeout(clearAutofilledSearch, 1200);
+  setTimeout(function() {
+    if (!userHasInteracted) searchEl.removeAttribute('readonly');
+  }, 1500);
+}
+
+function getSortedFilteredProjects() {
+  let filtered = getFilteredProjects();
+
+  if (sortDir !== 0) {
+    filtered = filtered.slice().sort((a, b) => {
+      const na = parseInt((a.id || '-').replace(/[^0-9]/g, '')) || 0;
+      const nb = parseInt((b.id || '-').replace(/[^0-9]/g, '')) || 0;
+      return sortDir === 1 ? na - nb : nb - na;
+    });
+  }
+
+  if (sortPriorityDir !== 0) {
+    var priorityOrder = { '紧急': 3, '高': 2, '中': 1, '低': 0 };
+    var dir = sortPriorityDir;
+    filtered = filtered.slice().sort(function(a, b) {
+      var pa = Object.prototype.hasOwnProperty.call(priorityOrder, a.priority) ? priorityOrder[a.priority] : -1;
+      var pb = Object.prototype.hasOwnProperty.call(priorityOrder, b.priority) ? priorityOrder[b.priority] : -1;
+      return dir === 1 ? pa - pb : pb - pa;
+    });
+  }
+
+  return filtered;
 }
 
 // ===== 渲染全部 =====
@@ -381,27 +519,7 @@ function fillSelect(id, values) {
 // ===== 列表视图 =====
 function renderList() {
   const tbody = document.getElementById('listTbody');
-  let filtered = getFilteredProjects();
-
-  // 编号排序
-  if (sortDir !== 0) {
-    filtered = filtered.slice().sort((a, b) => {
-      const na = parseInt((a.id || '-').replace(/[^0-9]/g, '')) || 0;
-      const nb = parseInt((b.id || '-').replace(/[^0-9]/g, '')) || 0;
-      return sortDir === 1 ? na - nb : nb - na;
-    });
-  }
-
-  // 优先级排序
-  if (sortPriorityDir !== 0) {
-    var priorityOrder = { '紧急': 3, '高': 2, '中': 1, '低': 0 };
-    var dir = sortPriorityDir;
-    filtered = filtered.slice().sort(function(a, b) {
-      var pa = priorityOrder.hasOwnProperty(a.priority) ? priorityOrder[a.priority] : -1;
-      var pb = priorityOrder.hasOwnProperty(b.priority) ? priorityOrder[b.priority] : -1;
-      return dir === 1 ? pa - pb : pb - pa;
-    });
-  }
+  let filtered = getSortedFilteredProjects();
 
   if (filtered.length === 0) {
     tbody.innerHTML = '<tr><td colspan="10" class="empty-state">没有匹配的项目</td></tr>';
@@ -433,7 +551,7 @@ function renderList() {
 // ===== 卡片视图 =====
 function renderCards() {
   const grid = document.getElementById('projectGrid');
-  const filtered = getFilteredProjects();
+  const filtered = getSortedFilteredProjects();
 
   if (filtered.length === 0) {
     grid.innerHTML = '<div class="empty-state">没有匹配的项目</div>';
@@ -629,8 +747,8 @@ function addUpdate(idx) {
   if (!content) return;
 
   var p = projects[idx];
-  var key = p.id || '_idx_' + idx;
   var edits = getLocalEdits();
+  var key = getEditStorageKey(p, idx, edits);
   if (!edits[key]) edits[key] = {};
   if (!edits[key]._localUpdates) edits[key]._localUpdates = [];
 
@@ -681,8 +799,8 @@ function editUpdate(projectIdx, updateIdx) {
     var newContent = contentDiv.querySelector('.ti-edit-text').value.trim();
     if (!newContent) return;
 
-    var key = p.id || '_idx_' + projectIdx;
     var edits = getLocalEdits();
+    var key = getEditStorageKey(p, projectIdx, edits);
     if (!edits[key]) edits[key] = {};
 
     if (u.author === 'OA周报') {
@@ -729,8 +847,8 @@ function deleteUpdate(projectIdx, updateIdx) {
 
   if (!confirm('确定删除这条动态吗？')) return;
 
-  var key = p.id || '_idx_' + projectIdx;
   var edits = getLocalEdits();
+  var key = getEditStorageKey(p, projectIdx, edits);
   if (!edits[key]) edits[key] = {};
 
   if (u.author === 'OA周报') {
@@ -843,15 +961,15 @@ function openEdit(idx) {
     </div>
     <div class="form-group">
       <label>干系人登记表（每行一条：姓名,重要性,类别,单位及职务,联系方式,我方联系人,备注）</label>
-      <textarea id="editStakeholders" rows="4">${(p.stakeholders||[]).map(s => [s.name,s.importance,s.category,s.unit,s.contact,s.ourContact,s.remark].map(v=>v||'').join(',')).join('\n')}</textarea>
+      <textarea id="editStakeholders" rows="4">${escAttr(formatCsvRows(p.stakeholders, ['name','importance','category','unit','contact','ourContact','remark']))}</textarea>
     </div>
     <div class="form-group">
       <label>项目风险管理计划（每行一条：类别,风险内容,应对方案）</label>
-      <textarea id="editRiskPlan" rows="4">${(p.riskPlan||[]).map(r => [r.category,r.content,r.solution].map(v=>v||'').join(',')).join('\n')}</textarea>
+      <textarea id="editRiskPlan" rows="4">${escAttr(formatCsvRows(p.riskPlan, ['category','content','solution']))}</textarea>
     </div>
     <div class="form-group">
       <label>项目变更记录（每行一条：日期,变更内容,影响,提出人,状态）</label>
-      <textarea id="editChangeLog" rows="4">${(p.changeLog||[]).map(c => [c.date,c.content,c.impact,c.proposer,c.status].map(v=>v||'').join(',')).join('\n')}</textarea>
+      <textarea id="editChangeLog" rows="4">${escAttr(formatCsvRows(p.changeLog, ['date','content','impact','proposer','status']))}</textarea>
     </div>
     <div class="form-group">
       <label>商务进展</label>
@@ -868,8 +986,8 @@ function saveEdit() {
   if (isNaN(idx) || idx < 0 || idx >= projects.length) return;
 
   const p = projects[idx];
-  const key = p.id || `_idx_${idx}`;
   const edits = getLocalEdits();
+  const key = getEditStorageKey(p, idx, edits);
 
   const changes = {
     name: document.getElementById('editName').value.trim(),
@@ -893,9 +1011,18 @@ function saveEdit() {
     changeLog: parseCsvLines(document.getElementById('editChangeLog').value, ['date','content','impact','proposer','status'])
   };
 
+  if (hasDuplicateProjectId(changes.id, idx)) {
+    alert('项目编号已存在，请换一个编号');
+    return;
+  }
+
   // 保存到 localStorage
   if (!edits[key]) edits[key] = {};
   Object.assign(edits[key], changes);
+  var newKey = getProjectKey(changes, idx);
+  if (newKey !== key) {
+    edits[newKey] = { ...(edits[newKey] || {}), ...edits[key] };
+  }
   saveLocalEdits(edits);
 
   // 更新内存
@@ -953,14 +1080,16 @@ function showToast(msg) {
 
 // ===== 工具函数 =====
 function esc(s) {
-  if (!s) return '';
+  if (s === undefined || s === null) return '';
+  s = String(s);
   const div = document.createElement('div');
   div.textContent = s;
   return div.innerHTML;
 }
 
 function escAttr(s) {
-  if (!s) return '';
+  if (s === undefined || s === null) return '';
+  s = String(s);
   return s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
@@ -1011,6 +1140,15 @@ function parseCsvLines(text, fields) {
     fields.forEach((f, i) => { obj[f] = (vals[i] || '').trim(); });
     return obj;
   });
+}
+
+function formatCsvRows(rows, fields) {
+  return (rows || []).map(function(row) {
+    return fields.map(function(field) {
+      var value = row && row[field];
+      return value === undefined || value === null ? '' : value;
+    }).join(',');
+  }).join('\n');
 }
 
 function renderChangeLogTable(rows) {
@@ -1147,6 +1285,7 @@ function saveNewProject() {
   const id = document.getElementById('newId').value.trim();
   if (!name) { alert('请填写项目名称'); return; }
   if (!id) { alert('请填写项目编号'); return; }
+  if (hasDuplicateProjectId(id, -1)) { alert('项目编号已存在，请换一个编号'); return; }
 
   const p = {
     id,

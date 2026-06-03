@@ -541,7 +541,7 @@ body {
 .badge-phase-default { background: #f1f5f9; color: #64748b; }
 
 .badge-status-active { background: var(--green-light); color: #065f46; }
-.badge-status-done { background: var(--purple-light); color: #5b21b6; }
+.badge-status-done { background: #f1f5f9; color: #64748b; }
 .badge-status-default { background: #f1f5f9; color: #64748b; }
 
 .badge-priority-urgent { background: var(--red-light); color: #991b1b; }
