@@ -828,6 +828,7 @@ body {
 .form-group textarea { min-height: 80px; line-height: 1.6; }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+.form-row-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
 
 .btn-cancel {
   padding: 10px 20px; border: 1px solid var(--border);
@@ -867,7 +868,7 @@ body {
   .filter-bar { flex-direction: column; align-items: stretch; }
   .filter-selects { flex-wrap: wrap; }
   .detail-grid { grid-template-columns: 1fr; }
-  .form-row, .form-row-3 { grid-template-columns: 1fr; }
+  .form-row, .form-row-3, .form-row-4 { grid-template-columns: 1fr; }
   .list-view { padding: 0 12px; overflow-x: auto; }
   .project-table { font-size: 12px; min-width: 900px; }
   .project-table th, .project-table td { padding: 10px 8px; }

@@ -10,7 +10,7 @@ let sortPriorityDir = -1;     // 优先级排序：默认紧急→低，1=低→
 const STORAGE_KEY = 'pmo_project_edits';
 
 // ===== GitHub API 直接持久化 =====
-var APP_VERSION = '20260603-priority-sort';
+var APP_VERSION = '20260603-contract-status';
 var GITHUB_API_URL = 'https://api.github.com/repos/jc000ex/PMO/contents/data/projects.json';
 var _syncTimer = null;
 
@@ -51,6 +51,10 @@ function hasDuplicateProjectId(id, exceptIdx) {
   return projects.some(function(p, i) {
     return i !== exceptIdx && normalizeProjectId(p.id) === normalized;
   });
+}
+
+function getContractStatus(p) {
+  return (p && p.contractStatus) === '有' ? '有' : '无';
 }
 
 function syncToServer() {
@@ -614,6 +618,7 @@ function openDetail(idx) {
               <div><span class="di-label">项目阶段：</span><span class="di-value">${phaseBadge(p.phase)}</span></div>
               <div><span class="di-label">项目状态：</span><span class="di-value">${statusBadge(p.status)}</span></div>
               <div><span class="di-label">优先级：</span><span class="di-value">${priorityBadge(p.priority)}</span></div>
+              <div><span class="di-label">合同情况：</span><span class="di-value">${esc(getContractStatus(p))}</span></div>
               <div><span class="di-label">客户：</span><span class="di-value">${esc(p.customer) || '--'}</span></div>
               <div><span class="di-label">项目负责人：</span><span class="di-value">${esc(p.pm) || '未指定'}</span></div>
               <div><span class="di-label">成员：</span><span class="di-value">${esc(p.members) || '--'}</span></div>
@@ -896,7 +901,7 @@ function openEdit(idx) {
         <input type="text" id="editId" value="${escAttr(p.id)}">
       </div>
     </div>
-    <div class="form-row-3">
+    <div class="form-row-4">
       <div class="form-group">
         <label>项目阶段</label>
         <select id="editPhase">
@@ -920,6 +925,13 @@ function openEdit(idx) {
           <option value="高" ${p.priority==='高'?'selected':''}>高</option>
           <option value="中" ${p.priority==='中'?'selected':''}>中</option>
           <option value="低" ${p.priority==='低'?'selected':''}>低</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>合同情况</label>
+        <select id="editContractStatus">
+          <option value="无" ${getContractStatus(p)==='无'?'selected':''}>无</option>
+          <option value="有" ${getContractStatus(p)==='有'?'selected':''}>有</option>
         </select>
       </div>
     </div>
@@ -995,6 +1007,7 @@ function saveEdit() {
     phase: document.getElementById('editPhase').value,
     status: document.getElementById('editStatus').value,
     priority: document.getElementById('editPriority').value,
+    contractStatus: document.getElementById('editContractStatus').value,
     customer: document.getElementById('editCustomer').value.trim(),
     pm: document.getElementById('editPm').value.trim(),
     startDate: document.getElementById('editStartDate').value,
@@ -1188,7 +1201,7 @@ function openNewProject() {
         <input type="text" id="newId" placeholder="必填">
       </div>
     </div>
-    <div class="form-row-3">
+    <div class="form-row-4">
       <div class="form-group">
         <label>项目阶段</label>
         <select id="newPhase">
@@ -1212,6 +1225,13 @@ function openNewProject() {
           <option value="紧急">紧急</option>
           <option value="高">高</option>
           <option value="低">低</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>合同情况</label>
+        <select id="newContractStatus">
+          <option value="无" selected>无</option>
+          <option value="有">有</option>
         </select>
       </div>
     </div>
@@ -1293,6 +1313,7 @@ function saveNewProject() {
     phase: document.getElementById('newPhase').value,
     status: document.getElementById('newStatus').value,
     priority: document.getElementById('newPriority').value,
+    contractStatus: document.getElementById('newContractStatus').value,
     customer: document.getElementById('newCustomer').value.trim(),
     pm: document.getElementById('newPm').value.trim(),
     startDate: document.getElementById('newStartDate').value,
