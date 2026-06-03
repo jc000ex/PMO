@@ -2,7 +2,7 @@
   {
     "id": "GD-202",
     "name": "中移凌云低空监管平台（apec-探测反制）",
-    "phase": "系统测试中",
+    "phase": "实施开发中",
     "status": "进行中",
     "priority": "高",
     "customer": "成研-航宇",
@@ -469,9 +469,9 @@
   },
   {
     "id": "-",
-    "name": "呼伦贝尔共建",
+    "name": "福建长乐光伏冷却塔AI巡检应用",
     "phase": "售前",
-    "status": "已完成",
+    "status": "进行中",
     "priority": "低",
     "customer": "成研-航宇",
     "pm": "",
@@ -490,7 +490,7 @@
         "author": ""
       }
     ],
-    "background": "1、4月2日接入机场。\n2、4月2日共建演示平台已上线，已通知客户切换机场（尚未答复，尚未接入）。\n【目前机场是离线状态】",
+    "background": "1、3月底开发完成相关行业模型，并绘制巡检航线做使用。\n2、机库接在共建演示平台（汕头），常态化演示使用中。（last：23日）",
     "objectives": "",
     "scope": "",
     "acceptanceCriteria": "",
@@ -517,13 +517,13 @@
     "milestones": [],
     "updates": [
       {
-        "date": "2026-04-20",
-        "content": "更换到汕头演示平台，已通知航宇，航宇尚未通知客户切换到汕头演示平台。",
+        "date": "2026-04-02",
+        "content": "接入无人机场一台，并调试",
         "author": ""
       },
       {
-        "date": "2026-04-02",
-        "content": "接入无人机场一台，并调试",
+        "date": "2026-04-20",
+        "content": "更换到汕头演示平台，已通知航宇，航宇尚未通知客户切换到汕头演示平台。",
         "author": ""
       }
     ],
@@ -538,11 +538,11 @@
   },
   {
     "id": "-",
-    "name": "呼伦贝尔共建",
+    "name": "中建设规院城市体检算法识别",
     "phase": "售前",
-    "status": "已完成",
+    "status": "进行中",
     "priority": "低",
-    "customer": "成研-航宇",
+    "customer": "中建设规院",
     "pm": "",
     "startDate": "",
     "endDate": "",
@@ -559,7 +559,7 @@
         "author": ""
       }
     ],
-    "background": "1、4月2日接入机场。\n2、4月2日共建演示平台已上线，已通知客户切换机场（尚未答复，尚未接入）。\n【目前机场是离线状态】",
+    "background": "",
     "objectives": "",
     "scope": "",
     "acceptanceCriteria": "",
@@ -570,11 +570,11 @@
   },
   {
     "id": "-",
-    "name": "呼伦贝尔共建",
-    "phase": "售前",
-    "status": "已完成",
-    "priority": "低",
-    "customer": "成研-航宇",
+    "name": "龙华区低空智联网数字底座一体化建设项目",
+    "phase": "实施开发中",
+    "status": "进行中",
+    "priority": "高",
+    "customer": "成研-黄益-徐总",
     "pm": "",
     "startDate": "",
     "endDate": "",
@@ -616,7 +616,7 @@
         "author": ""
       }
     ],
-    "background": "1、4月2日接入机场。\n2、4月2日共建演示平台已上线，已通知客户切换机场（尚未答复，尚未接入）。\n【目前机场是离线状态】",
+    "background": "",
     "objectives": "",
     "scope": "",
     "acceptanceCriteria": "",
