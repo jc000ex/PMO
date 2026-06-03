@@ -700,8 +700,8 @@
     "phase": "售前",
     "status": "进行中",
     "priority": "紧急",
-    "customer": "",
-    "pm": "",
+    "customer": "机场集团",
+    "pm": "王哲",
     "startDate": "",
     "endDate": "",
     "actualEndDate": "",
@@ -718,6 +718,7 @@
     "stakeholders": [],
     "riskPlan": [],
     "changeLog": [],
-    "summary": ""
+    "summary": "",
+    "contractStatus": "无"
   }
 ]
