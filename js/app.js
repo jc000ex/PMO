@@ -10,7 +10,8 @@ let sortPriorityDir = -1;     // 优先级排序：默认紧急→低，1=低→
 const STORAGE_KEY = 'pmo_project_edits';
 
 // ===== GitHub API 直接持久化 =====
-var APP_VERSION = '20260603-edit-sync-fix';
+var APP_VERSION = '20260603-online-data-first';
+var ONLINE_DATA_URL = 'https://jc000ex.github.io/PMO/data/projects.json';
 var GITHUB_API_URL = 'https://api.github.com/repos/jc000ex/PMO/contents/data/projects.json';
 var _syncTimer = null;
 
@@ -68,6 +69,37 @@ function isStaticSaveHost() {
     host === '127.0.0.1' ||
     host === 'localhost' ||
     host.endsWith('.github.io');
+}
+
+function shouldReadOnlineDataFirst() {
+  var host = window.location.hostname;
+  return window.location.protocol === 'file:' ||
+    host === '127.0.0.1' ||
+    host === 'localhost';
+}
+
+function getProjectDataSources() {
+  var stamp = encodeURIComponent(APP_VERSION + '-' + Date.now());
+  var localUrl = 'data/projects.json?v=' + stamp;
+  var onlineUrl = ONLINE_DATA_URL + '?v=' + stamp;
+  return shouldReadOnlineDataFirst() ? [onlineUrl, localUrl] : [localUrl];
+}
+
+function fetchProjectDataFromSources(sources, idx) {
+  idx = idx || 0;
+  var url = sources[idx];
+  return fetch(url, { cache: 'no-store' })
+    .then(function(r) {
+      if (!r.ok) throw new Error('数据加载失败: HTTP ' + r.status + ' ' + url);
+      return r.json();
+    })
+    .catch(function(err) {
+      if (idx + 1 < sources.length) {
+        console.warn('项目数据源不可用，尝试备用数据源:', err);
+        return fetchProjectDataFromSources(sources, idx + 1);
+      }
+      throw err;
+    });
 }
 
 function getPersistableProjects() {
@@ -248,8 +280,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ===== 加载数据 =====
 function loadProjects() {
-  fetch('data/projects.json?v=' + encodeURIComponent(APP_VERSION), { cache: 'no-store' })
-    .then(r => r.json())
+  fetchProjectDataFromSources(getProjectDataSources())
     .then(data => {
       originalProjects = data;
       mergeLocalEdits();
