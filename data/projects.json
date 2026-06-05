@@ -637,12 +637,12 @@
   },
   {
     "id": "UN-205",
-    "name": "宏大",
-    "phase": "售前",
+    "name": "宏大增城工厂 视频 AI 系统项目",
+    "phase": "实施开发中",
     "status": "进行中",
-    "priority": "中",
-    "customer": "",
-    "pm": "",
+    "priority": "高",
+    "customer": "宏大",
+    "pm": "马景鹏",
     "startDate": "",
     "endDate": "",
     "actualEndDate": "",
@@ -651,7 +651,7 @@
     "businessProgress": "",
     "currentFocus": "",
     "milestones": [],
-    "background": "",
+    "background": "一期和考拉合作，国科过手；有大型二期计划，建设周期围棋半年",
     "objectives": "",
     "scope": "",
     "acceptanceCriteria": "",
@@ -665,7 +665,8 @@
         "content": "讨论了三维模型方式，高斯泼溅ply能修复水面破洞但不可测量，b3dm水面有破洞但可满足测量要求",
         "author": "PMO"
       }
-    ]
+    ],
+    "contractStatus": "有"
   },
   {
     "id": "CQ-236",
