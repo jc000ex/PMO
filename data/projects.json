@@ -726,5 +726,32 @@
     "changeLog": [],
     "summary": "",
     "contractStatus": "无"
+  },
+  {
+    "id": "AH-206",
+    "name": "安徽公安大学26项目",
+    "phase": "售前",
+    "status": "进行中",
+    "priority": "高",
+    "contractStatus": "无",
+    "customer": "安徽公安大学",
+    "pm": "待定",
+    "startDate": "2026-06-08",
+    "endDate": "2026-06-30",
+    "actualEndDate": "",
+    "members": "",
+    "businessPhase": false,
+    "businessProgress": "",
+    "currentFocus": "",
+    "milestones": [],
+    "updates": [],
+    "background": "建设“网络安全低空防控仿真系统”，包括①核心识别模块（实时信号、无人机型号内置、防区管理、数据回放检索） ②测向定位与GIS可视化③教学班防御管控系统④接口调试与二次开发平台⑤系统管理与维护模块",
+    "objectives": "",
+    "scope": "",
+    "acceptanceCriteria": "",
+    "stakeholders": [],
+    "riskPlan": [],
+    "changeLog": [],
+    "summary": ""
   }
 ]
