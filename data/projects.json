@@ -17,6 +17,11 @@
     "milestones": [],
     "updates": [
       {
+        "date": "2026-06-04",
+        "content": "一轮汇报结束",
+        "author": "PMO"
+      },
+      {
         "date": "2026-05-15 ~ 2026-05-18 (OA周报)",
         "content": "本周1人参与（3h）：监管组织架构导入 二类网；监管平台二到三类网 MQTT",
         "author": "OA周报"
