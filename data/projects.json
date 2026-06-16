@@ -819,5 +819,32 @@
     "riskPlan": [],
     "changeLog": [],
     "summary": ""
+  },
+  {
+    "id": "111",
+    "name": "德兴市一网统飞项目",
+    "phase": "售前",
+    "status": "进行中",
+    "priority": "高",
+    "contractStatus": "无",
+    "customer": "德兴移动",
+    "pm": "马景鹏",
+    "startDate": "",
+    "endDate": "",
+    "actualEndDate": "",
+    "members": "",
+    "businessPhase": false,
+    "businessProgress": "",
+    "currentFocus": "",
+    "milestones": [],
+    "updates": [],
+    "background": "",
+    "objectives": "",
+    "scope": "",
+    "acceptanceCriteria": "",
+    "stakeholders": [],
+    "riskPlan": [],
+    "changeLog": [],
+    "summary": ""
   }
 ]
