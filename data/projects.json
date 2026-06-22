@@ -42,7 +42,7 @@
     "name": "贺州市公安局警用无人机指挥调度系统（中移凌云）",
     "phase": "实施开发中",
     "status": "进行中",
-    "priority": "高",
+    "priority": "紧急",
     "customer": "成研-航宇",
     "pm": "马景鹏",
     "startDate": "",
@@ -162,14 +162,15 @@
     ],
     "riskPlan": [],
     "changeLog": [],
-    "summary": ""
+    "summary": "",
+    "contractStatus": "有"
   },
   {
     "id": "JL25-227",
     "name": "长春公安低空智慧警务系统（中移凌云）",
     "phase": "实施开发中",
     "status": "进行中",
-    "priority": "高",
+    "priority": "紧急",
     "customer": "成研-航宇",
     "pm": "郑友华",
     "startDate": "2025-11-01",
@@ -239,7 +240,8 @@
     "stakeholders": [],
     "riskPlan": [],
     "changeLog": [],
-    "summary": ""
+    "summary": "",
+    "contractStatus": "有"
   },
   {
     "id": "XJ-201",
@@ -654,7 +656,7 @@
     "name": "龙华区低空智联网数字底座一体化建设项目",
     "phase": "实施开发中",
     "status": "进行中",
-    "priority": "高",
+    "priority": "紧急",
     "customer": "成研-黄益-徐总",
     "pm": "",
     "startDate": "",
@@ -709,14 +711,15 @@
     "stakeholders": [],
     "riskPlan": [],
     "changeLog": [],
-    "summary": ""
+    "summary": "",
+    "contractStatus": "有"
   },
   {
     "id": "UN-205",
     "name": "宏大增城工厂 视频 AI 系统项目",
     "phase": "实施开发中",
     "status": "进行中",
-    "priority": "高",
+    "priority": "紧急",
     "customer": "宏大",
     "pm": "马景鹏",
     "startDate": "",
@@ -866,7 +869,7 @@
   },
   {
     "id": "AH-206",
-    "name": "安徽公安大学26项目",
+    "name": "安徽公安大学实验室平台交付",
     "phase": "售前",
     "status": "进行中",
     "priority": "高",
@@ -882,7 +885,7 @@
     "currentFocus": "",
     "milestones": [],
     "updates": [],
-    "background": "建设“网络安全低空防控仿真系统”，包括①核心识别模块（实时信号、无人机型号内置、防区管理、数据回放检索） ②测向定位与GIS可视化③教学班防御管控系统④接口调试与二次开发平台⑤系统管理与维护模块",
+    "background": "ap平台根据招标要求做简化、部分开关隐藏，部署于一体机上做交付；接入北京历正的设备，并做数据呈现。",
     "objectives": "",
     "scope": "",
     "acceptanceCriteria": "",
