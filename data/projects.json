@@ -456,7 +456,13 @@
     "businessProgress": "",
     "currentFocus": "",
     "milestones": [],
-    "updates": [],
+    "updates": [
+      {
+        "date": "2026-06-22",
+        "content": "又被踢了",
+        "author": "PMO"
+      }
+    ],
     "background": "1、交付产品共建版本（无一体机）版本。\n2、计划四月底交付。\n3、注意，前期文件用的是成研老平台的文件内容，后续文件要用共建平台去套老内容。",
     "objectives": "",
     "scope": "",
