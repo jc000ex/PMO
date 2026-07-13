@@ -993,7 +993,13 @@
     "businessProgress": "",
     "currentFocus": "",
     "milestones": [],
-    "updates": [],
+    "updates": [
+      {
+        "date": "2026-07-10",
+        "content": "提交新一版本的招标文件",
+        "author": "PMO"
+      }
+    ],
     "background": "",
     "objectives": "",
     "scope": "",
