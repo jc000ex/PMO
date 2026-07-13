@@ -8,12 +8,15 @@ let sortPriorityDir = -1;     // 优先级排序：默认紧急→低，1=低→
 
 // ===== localStorage 键 =====
 const STORAGE_KEY = 'pmo_project_edits';
+const SYNC_PENDING_KEY = 'pmo_sync_pending';
+const SYNC_ERROR_KEY = 'pmo_sync_error';
 
 // ===== GitHub API 直接持久化 =====
-var APP_VERSION = '20260603-online-data-first';
+var APP_VERSION = '20260713-sync-retry';
 var ONLINE_DATA_URL = 'https://jc000ex.github.io/PMO/data/projects.json';
 var GITHUB_API_URL = 'https://api.github.com/repos/jc000ex/PMO/contents/data/projects.json';
 var _syncTimer = null;
+var _syncInFlight = false;
 
 function getToken() {
   // 优先用 config.js 的变量，其次用 localStorage 的
@@ -59,8 +62,60 @@ function getContractStatus(p) {
 }
 
 function syncToServer() {
+  markSyncPending('等待同步到 GitHub');
   if (_syncTimer) clearTimeout(_syncTimer);
   _syncTimer = setTimeout(doSync, 2000);
+}
+
+function markSyncPending(reason) {
+  try {
+    localStorage.setItem(SYNC_PENDING_KEY, String(Date.now()));
+    if (reason) localStorage.setItem(SYNC_ERROR_KEY, reason);
+  } catch (err) {
+    console.warn('无法写入同步状态:', err);
+  }
+  updateSyncIndicator();
+}
+
+function clearSyncPending() {
+  try {
+    localStorage.removeItem(SYNC_PENDING_KEY);
+    localStorage.removeItem(SYNC_ERROR_KEY);
+  } catch (err) {
+    console.warn('无法清理同步状态:', err);
+  }
+  updateSyncIndicator();
+}
+
+function getSyncErrorMessage(err) {
+  var msg = err && err.message ? err.message : String(err || '未知错误');
+  if (/401|Bad credentials/i.test(msg)) return 'GitHub Token 无效或已过期';
+  if (/403/i.test(msg)) return 'GitHub Token 权限不足或访问受限';
+  if (/409|conflict/i.test(msg)) return '线上数据刚被更新，自动重试仍失败';
+  if (/Failed to fetch|NetworkError|Load failed/i.test(msg)) return '网络连接 GitHub 失败';
+  return msg;
+}
+
+function updateSyncIndicator() {
+  var btn = document.getElementById('btnSettings');
+  if (!btn) return;
+
+  var pending = false;
+  var error = '';
+  try {
+    pending = !!localStorage.getItem(SYNC_PENDING_KEY);
+    error = localStorage.getItem(SYNC_ERROR_KEY) || '';
+  } catch {}
+
+  if (pending) {
+    btn.style.color = 'var(--red)';
+    btn.title = '有本地数据未同步到 GitHub：' + (error || '等待重试');
+    return;
+  }
+
+  var existing = getToken();
+  btn.style.color = existing ? 'var(--green)' : '';
+  btn.title = existing ? 'GitHub Token 已配置' : '设置 GitHub Token';
 }
 
 function isStaticSaveHost() {
@@ -125,43 +180,58 @@ async function saveViaServer(cleanProjects) {
   }
 }
 
-async function saveViaGitHub(cleanProjects, token) {
-  var json = JSON.stringify(cleanProjects, null, 2) + '\n';
-  var content = btoa(unescape(encodeURIComponent(json)));
-
-  // 先获取当前文件的 sha
-  var getRes = await fetch(GITHUB_API_URL + '?ref=main', {
+async function readGitHubFileInfo(token) {
+  var getRes = await fetch(GITHUB_API_URL + '?ref=main&_=' + Date.now(), {
+    cache: 'no-store',
     headers: {
       Authorization: 'Bearer ' + token,
       Accept: 'application/vnd.github+json'
     }
   });
-  if (!getRes.ok) throw new Error('读取文件失败: ' + getRes.status);
-  var fileInfo = await getRes.json();
-  var sha = fileInfo.sha;
+  if (!getRes.ok) {
+    var getErr = await getRes.json().catch(function() { return {}; });
+    throw new Error((getErr.message || '读取文件失败') + ' (HTTP ' + getRes.status + ')');
+  }
+  return getRes.json();
+}
 
-  // 提交更新
-  var putRes = await fetch(GITHUB_API_URL, {
-    method: 'PUT',
-    headers: {
-      Authorization: 'Bearer ' + token,
-      'Content-Type': 'application/json',
-      Accept: 'application/vnd.github+json'
-    },
-    body: JSON.stringify({
-      message: 'Update projects.json via PMO dashboard',
-      content: content,
-      sha: sha,
-      branch: 'main'
-    })
-  });
-  if (!putRes.ok) {
+async function saveViaGitHub(cleanProjects, token) {
+  var json = JSON.stringify(cleanProjects, null, 2) + '\n';
+  var content = btoa(unescape(encodeURIComponent(json)));
+
+  for (var attempt = 0; attempt < 3; attempt++) {
+    var fileInfo = await readGitHubFileInfo(token);
+
+    var putRes = await fetch(GITHUB_API_URL, {
+      method: 'PUT',
+      headers: {
+        Authorization: 'Bearer ' + token,
+        'Content-Type': 'application/json',
+        Accept: 'application/vnd.github+json'
+      },
+      body: JSON.stringify({
+        message: 'Update projects.json via PMO dashboard',
+        content: content,
+        sha: fileInfo.sha,
+        branch: 'main'
+      })
+    });
+
+    if (putRes.ok) return;
+
     var err = await putRes.json().catch(function() { return {}; });
-    throw new Error(err.message || 'HTTP ' + putRes.status);
+    var message = err.message || 'HTTP ' + putRes.status;
+    if (putRes.status === 409 && attempt < 2) {
+      await new Promise(function(resolve) { setTimeout(resolve, 700); });
+      continue;
+    }
+    throw new Error(message + ' (HTTP ' + putRes.status + ')');
   }
 }
 
 async function doSync() {
+  if (_syncInFlight) return;
+  _syncInFlight = true;
   _syncTimer = null;
   var clean = getPersistableProjects();
   var token = getToken();
@@ -171,18 +241,25 @@ async function doSync() {
     try {
       await saveViaGitHub(clean, token);
       originalProjects = clean;
+      clearSyncPending();
       showToast('数据已同步到 GitHub ✓');
       return;
     } catch (fallbackErr) {
       console.error('浏览器 Token 同步失败:', fallbackErr);
-      showToast('⚠ GitHub 同步失败，已暂存本地');
+      var fallbackMsg = getSyncErrorMessage(fallbackErr);
+      markSyncPending(fallbackMsg);
+      showToast('⚠ ' + fallbackMsg + '，已暂存本地');
       return;
+    } finally {
+      _syncInFlight = false;
     }
   }
 
   if (isStaticSaveHost()) {
     console.log('静态页面未配置 GitHub Token，数据暂存在 localStorage');
+    markSyncPending('未配置 GitHub Token');
     showToast('⚠ 已保存到当前浏览器，未同步线上');
+    _syncInFlight = false;
     return;
   }
 
@@ -193,14 +270,18 @@ async function doSync() {
     console.warn('服务端同步不可用，尝试浏览器 Token 同步:', err);
 
     console.log('GitHub Token 未配置，数据暂存在 localStorage');
+    markSyncPending('服务器同步不可用');
     showToast('⚠ 服务器同步不可用，已暂存本地');
+    _syncInFlight = false;
     return;
   }
 
   // 同步成功后更新 originalProjects 为最新数据，作为内存基准
   // 不再清空 localStorage，避免 Pages 部署延迟期间数据丢失
   originalProjects = clean;
+  clearSyncPending();
   showToast(serverError ? '数据已通过浏览器 Token 同步 ✓' : '数据已同步到服务器 ✓');
+  _syncInFlight = false;
 }
 
 // ===== 初始化 =====
@@ -1449,6 +1530,7 @@ function initTokenUI() {
   var tokenClose = document.getElementById('tokenClose');
   var btnTokenCancel = document.getElementById('btnTokenCancel');
   var btnTokenSave = document.getElementById('btnTokenSave');
+  var btnTokenSync = document.getElementById('btnTokenSync');
   var tokenInput = document.getElementById('tokenInput');
   var tokenStatus = document.getElementById('tokenStatus');
   var modal = document.getElementById('modalToken');
@@ -1456,16 +1538,21 @@ function initTokenUI() {
   if (!btnSettings) return;
 
   // 初始化：显示已有 token 状态
-  var existing = getToken();
-  if (existing) {
-    btnSettings.style.color = 'var(--green)';
-    btnSettings.title = 'GitHub Token 已配置';
-  }
+  updateSyncIndicator();
 
   btnSettings.addEventListener('click', function() {
     var t = getToken();
+    var pending = false;
+    var lastError = '';
+    try {
+      pending = !!localStorage.getItem(SYNC_PENDING_KEY);
+      lastError = localStorage.getItem(SYNC_ERROR_KEY) || '';
+    } catch {}
     tokenInput.value = t;
-    tokenStatus.textContent = t ? '✅ Token 已配置（重新输入将覆盖）' : '';
+    tokenStatus.textContent = pending
+      ? '⚠ 有本地数据尚未同步：' + (lastError || '等待重试')
+      : (t ? '✅ Token 已配置（重新输入将覆盖）' : '');
+    tokenStatus.style.color = pending ? 'var(--red)' : 'var(--green)';
     modal.classList.add('open');
     document.body.style.overflow = 'hidden';
   });
@@ -1481,6 +1568,26 @@ function initTokenUI() {
     if (e.target === modal) closeTokenModal();
   });
 
+  if (btnTokenSync) {
+    btnTokenSync.addEventListener('click', function() {
+      tokenStatus.textContent = '正在同步...';
+      tokenStatus.style.color = 'var(--text-500)';
+      markSyncPending('手动重试同步');
+      doSync().then(function() {
+        var pending = false;
+        var lastError = '';
+        try {
+          pending = !!localStorage.getItem(SYNC_PENDING_KEY);
+          lastError = localStorage.getItem(SYNC_ERROR_KEY) || '';
+        } catch {}
+        tokenStatus.textContent = pending
+          ? '⚠ 仍未同步：' + (lastError || '请检查 Token 或网络')
+          : '✅ 数据已同步到 GitHub';
+        tokenStatus.style.color = pending ? 'var(--red)' : 'var(--green)';
+      });
+    });
+  }
+
   btnTokenSave.addEventListener('click', function() {
     var val = tokenInput.value.trim();
     if (!val) {
@@ -1488,11 +1595,13 @@ function initTokenUI() {
       tokenStatus.style.color = 'var(--red)';
       return;
     }
+    var hadPending = false;
+    try { hadPending = !!localStorage.getItem(SYNC_PENDING_KEY); } catch {}
     localStorage.setItem('pmo_github_token', val);
     tokenStatus.textContent = '✅ Token 已保存，数据将自动同步到 GitHub';
     tokenStatus.style.color = 'var(--green)';
-    btnSettings.style.color = 'var(--green)';
-    btnSettings.title = 'GitHub Token 已配置';
+    updateSyncIndicator();
+    if (hadPending) syncToServer();
     setTimeout(closeTokenModal, 800);
   });
 }
