@@ -977,5 +977,32 @@
     "riskPlan": [],
     "changeLog": [],
     "summary": ""
+  },
+  {
+    "id": "HB25-225",
+    "name": "河北衡水低空综合监管服务平台",
+    "phase": "系统测试中",
+    "status": "进行中",
+    "priority": "高",
+    "contractStatus": "有",
+    "customer": "华体",
+    "pm": "李一丁/王哲",
+    "startDate": "",
+    "endDate": "",
+    "actualEndDate": "",
+    "members": "",
+    "businessPhase": false,
+    "businessProgress": "",
+    "currentFocus": "",
+    "milestones": [],
+    "updates": [],
+    "background": "",
+    "objectives": "",
+    "scope": "",
+    "acceptanceCriteria": "",
+    "stakeholders": [],
+    "riskPlan": [],
+    "changeLog": [],
+    "summary": ""
   }
 ]
