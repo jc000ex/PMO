@@ -278,7 +278,7 @@
     "name": "中移凌云警用无人机调度指挥平台（伊犁-中移凌云）",
     "phase": "实施开发中",
     "status": "进行中",
-    "priority": "中",
+    "priority": "低",
     "customer": "成研-航宇",
     "pm": "王哲",
     "startDate": "2026-02-26",
@@ -313,7 +313,8 @@
     "stakeholders": [],
     "riskPlan": [],
     "changeLog": [],
-    "summary": ""
+    "summary": "",
+    "contractStatus": "无"
   },
   {
     "id": "SC25-228",
