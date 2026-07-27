@@ -721,6 +721,11 @@
     "milestones": [],
     "updates": [
       {
+        "date": "2026-07-27",
+        "content": "初步验收工作准备及参加初验会议；由客户组织并开展系统培训；为治安大队和机训大队协调开通两个多模融合感知系统帐号",
+        "author": "PMO"
+      },
+      {
         "date": "2026-07-13",
         "content": "完成验收要求的材料编制工作；气象设备需接入12台，目前已接入8台。多模融合平台在龙华环境目前仍无法正常运行（无法登录进系统），无法进行接口对接与联调。",
         "author": "PMO"
@@ -923,12 +928,12 @@
   },
   {
     "id": "JC-JS-001",
-    "name": "机场低空反无共建产品",
-    "phase": "售前",
+    "name": "机场低空安全智慧管理系统",
+    "phase": "实施开发中",
     "status": "进行中",
     "priority": "紧急",
     "customer": "机场集团",
-    "pm": "王哲",
+    "pm": "肖泽枫/王哲",
     "startDate": "",
     "endDate": "",
     "actualEndDate": "",
@@ -982,7 +987,7 @@
     "riskPlan": [],
     "changeLog": [],
     "summary": "",
-    "contractStatus": "无"
+    "contractStatus": "有"
   },
   {
     "id": "AH-206",
