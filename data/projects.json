@@ -860,7 +860,7 @@
     "phase": "实施开发中",
     "status": "进行中",
     "priority": "高",
-    "customer": "",
+    "customer": "蓝盾",
     "pm": "马景鹏/李一丁",
     "startDate": "",
     "endDate": "",
@@ -868,7 +868,7 @@
     "members": "",
     "businessPhase": false,
     "businessProgress": "",
-    "currentFocus": "新平台AI模型测试与BUG修复、老平台4G信号稳定性、服务器内网迁移",
+    "currentFocus": "",
     "milestones": [],
     "updates": [
       {
@@ -942,14 +942,15 @@
         "author": "PMO"
       }
     ],
-    "background": "",
-    "objectives": "",
-    "scope": "",
-    "acceptanceCriteria": "",
+    "background": "2025年老平台做演示，2026年新平台做交付部署（内网）",
+    "objectives": "同上",
+    "scope": "2026年新平台按照挂网内容做交付（12个场景）",
+    "acceptanceCriteria": "挂网内容",
     "stakeholders": [],
     "riskPlan": [],
     "changeLog": [],
-    "summary": ""
+    "summary": "",
+    "contractStatus": "无"
   },
   {
     "id": "JC-JS-001",
