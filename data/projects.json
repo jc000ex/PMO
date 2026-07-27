@@ -1119,5 +1119,32 @@
     "riskPlan": [],
     "changeLog": [],
     "summary": ""
+  },
+  {
+    "id": "GZ-209",
+    "name": "贵州低空安防平台",
+    "phase": "实施开发中",
+    "status": "进行中",
+    "priority": "高",
+    "contractStatus": "无",
+    "customer": "成研",
+    "pm": "何俊强",
+    "startDate": "",
+    "endDate": "",
+    "actualEndDate": "",
+    "members": "",
+    "businessPhase": false,
+    "businessProgress": "",
+    "currentFocus": "",
+    "milestones": [],
+    "updates": [],
+    "background": "贵州省厅在贵阳进行试点，无人机平台+监管平台，为期三个月试用期",
+    "objectives": "2026年8月1日前上线给客户试用",
+    "scope": "",
+    "acceptanceCriteria": "",
+    "stakeholders": [],
+    "riskPlan": [],
+    "changeLog": [],
+    "summary": ""
   }
 ]
