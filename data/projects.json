@@ -791,10 +791,10 @@
         "author": ""
       }
     ],
-    "background": "",
-    "objectives": "",
+    "background": "龙华区全区，软件：低空数字底座、安全感知运营平台。硬件：光电、TDOA、RID、雷达、全频、气象（测风、能见度、大气）",
+    "objectives": "龙华区全区低空智联网布设，定开软件平台+硬件设备接入+第三方设备接入",
     "scope": "",
-    "acceptanceCriteria": "",
+    "acceptanceCriteria": "2026年7月中旬已完成初验",
     "stakeholders": [],
     "riskPlan": [],
     "changeLog": [],
