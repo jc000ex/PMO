@@ -607,10 +607,10 @@
         "author": ""
       }
     ],
-    "background": "1、3月中旬提交招投标文件，暂无进展。\n2、平台正常运行中。",
-    "objectives": "",
-    "scope": "",
-    "acceptanceCriteria": "",
+    "background": "2026年7月老平台正常运行中，新平台部署完毕不可用。2026年3月中旬提交招投标文件，暂无进展。",
+    "objectives": "目标1老平台已完成，目标2使用新平台进行鄂市河道区域巡检、出报告。",
+    "scope": "使用老平台支撑日常演示+新平台做水利巡检",
+    "acceptanceCriteria": "无",
     "stakeholders": [],
     "riskPlan": [],
     "changeLog": [],
