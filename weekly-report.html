@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>项目周报汇总</title>
+<link rel="stylesheet" href="css/weekly-report.css?v=20261012-publish1">
+</head>
+<body>
+<header class="header">
+  <div class="header-left">
+    <h1>✈ 国科项目管理仪表板</h1>
+    <span class="header-subtitle">周报汇总 · 项目整体进展</span>
+  </div>
+  <div class="header-right">
+    <span class="update-time">最新周报：<em id="headerLatestDate">读取中</em></span>
+    <button class="theme-toggle" id="themeToggle" title="切换皮肤">
+      <span data-theme-val="report" title="汇报模式">◉</span>
+      <span data-theme-val="personal" title="自用模式">◎</span>
+    </button>
+    <button id="btnRefresh" class="btn-refresh">↻ 刷新周报</button>
+    <a class="btn-back" href="index.html">返回项目总览</a>
+  </div>
+</header>
+<main class="report-shell">
+  <section id="notice" class="notice" hidden></section>
+  <section id="weekListView">
+    <div class="section-heading"><div><h2>项目周报汇总列表</h2><p id="listHint">正在读取周报记录...</p></div><span id="weekCount" class="count-badge"></span></div>
+    <div id="weekList" class="week-list"></div>
+  </section>
+  <section id="weekDetailView" hidden>
+    <div class="detail-toolbar"><button id="btnBack" class="btn-back">← 返回周列表</button><div class="detail-toolbar-actions"><button id="btnCopyRaw" class="btn-back">复制原始周报</button><button id="btnPrint" class="btn-back">⎙ 打印报告</button></div></div>
+    <div class="report-title"><div><h2>本周各项目情况</h2><p id="selectedWeekLabel"></p></div></div>
+    <nav class="report-tabs" role="tablist" aria-label="周报版本">
+      <button class="report-tab active" id="tabRaw" role="tab" aria-selected="true" aria-controls="rawReportPanel">原始周报</button>
+      <button class="report-tab" id="tabExternal" role="tab" aria-selected="false" aria-controls="externalReportPanel">对外报告</button>
+    </nav>
+    <section id="rawReportPanel" class="report-panel" role="tabpanel">
+      <div class="external-toolbar"><p>复制本周原始内容发给我，我整理后可粘贴到“对外报告”中。</p></div>
+      <div id="rawReportContent"></div>
+    </section>
+    <section id="externalReportPanel" class="report-panel" role="tabpanel" hidden>
+      <div class="external-toolbar"><p id="externalReportStatus">粘贴整理好的报告并保存，内容会保存在当前浏览器。</p><div><button id="btnEditReport" class="btn-back" hidden>编辑报告</button><button id="btnCopyReport" class="btn-back" disabled>复制报告</button><button id="btnSaveReport" class="btn-refresh">保存对外报告</button></div></div>
+      <textarea id="externalReportInput" class="external-report-input" placeholder="将整理后的对外报告粘贴到这里"></textarea>
+      <article id="externalReport" class="external-report empty-report"><p>保存后，对外报告会显示在这里。</p></article>
+    </section>
+  </section>
+</main>
+<script src="js/weekly-report.js?v=20261012-publish1"></script>
+</body>
+</html>

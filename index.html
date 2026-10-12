@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>国科项目管理仪表板</title>
-<link rel="stylesheet" href="css/style.css?v=20260713-sync-retry">
+<link rel="stylesheet" href="css/style.css?v=20261012-publish1">
 </head>
 <body>
 
@@ -26,6 +26,7 @@
     </div>
     <button class="btn-settings" id="btnSettings" title="设置 GitHub Token">⚙</button>
     <button class="btn-export" id="btnExport" title="导出最新数据">⬇ 导出数据</button>
+    <button class="btn-weekly-report" id="btnWeeklyReport" title="查看周报汇总">▤ 周报汇总</button>
     <button class="btn-new-project" id="btnNewProject" title="新增项目">＋ 新增项目</button>
     <button class="btn-logout" id="btnLogout" title="退出登录">退出</button>
   </div>
@@ -61,7 +62,7 @@
     readonly>
   <div class="filter-selects">
     <div class="fs-item">
-      <label>阶段</label>
+      <label>阶段 <button type="button" class="phase-sort-btn" id="btnPhaseSort" title="轮换置顶项目阶段">⇅</button></label>
       <select id="filterPhase"><option value="">全部阶段</option></select>
     </div>
     <div class="fs-item">
@@ -160,7 +161,7 @@
 
 <script>
 if (sessionStorage.getItem('pmo_auth') !== '1') { window.location.replace('login.html'); }
-</script><script src="js/config.js"></script><script src="js/app.js?v=20260713-sync-retry"></script>
+</script><script src="js/config.js"></script><script src="js/app.js?v=20261012-publish1"></script>
 
 <!-- Token 设置弹窗 -->
 <div class="modal-overlay" id="modalToken">

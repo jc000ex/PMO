@@ -195,6 +195,18 @@ body {
 .vt-btn:hover:not(.active) { background: var(--surface-hover); }
 
 /* 导出按钮 */
+.btn-weekly-report {
+  padding: 6px 14px;
+  border: 1px solid var(--primary);
+  border-radius: var(--radius-sm);
+  background: var(--primary-light);
+  color: var(--primary-600);
+  font-size: 13px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all var(--transition-fast);
+}
+.btn-weekly-report:hover { background: var(--primary); color: #fff; }
 .btn-export {
   padding: 6px 14px;
   border: 1px solid var(--green);
@@ -336,6 +348,13 @@ body {
 .search-box::placeholder { color: var(--text-300); }
 
 .filter-selects { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.phase-sort-btn {
+  width: 22px; height: 22px; margin-left: 4px; padding: 0;
+  border: 1px solid var(--border); border-radius: 4px;
+  background: var(--surface); color: var(--text-500); cursor: pointer;
+  font: inherit; line-height: 20px; vertical-align: middle;
+}
+.phase-sort-btn:hover, .phase-sort-btn.active { color: var(--primary); border-color: var(--primary); background: var(--primary-light); }
 .fs-item { display: flex; align-items: center; gap: 6px; }
 .fs-item label { font-size: 12px; color: var(--text-500); white-space: nowrap; }
 .fs-item select {
@@ -536,6 +555,7 @@ body {
 }
 .badge-phase-presale { background: #fef3c7; color: #92400e; }
 .badge-phase-dev { background: #dbeafe; color: #1e40af; }
+.badge-phase-deploy { background: #cffafe; color: #155e75; }
 .badge-phase-test { background: #ede9fe; color: #5b21b6; }
 .badge-phase-done { background: #d1fae5; color: #065f46; }
 .badge-phase-default { background: #f1f5f9; color: #64748b; }

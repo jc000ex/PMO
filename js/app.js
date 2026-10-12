@@ -5,6 +5,7 @@ let currentView = 'list';    // 'list' | 'card'
 let currentDetailIdx = -1;   // 当前打开详情的项目索引
 let sortDir = 0;              // 编号排序：0=默认，1=升序，-1=降序
 let sortPriorityDir = -1;     // 优先级排序：默认紧急→低，1=低→高，-1=高→低
+let phasePinnedValue = '';
 
 // ===== localStorage 键 =====
 const STORAGE_KEY = 'pmo_project_edits';
@@ -302,6 +303,7 @@ document.addEventListener('DOMContentLoaded', () => {
   ['filterPhase', 'filterStatus', 'filterPriority', 'filterPm', 'filterCustomer'].forEach(id => {
     document.getElementById(id).addEventListener('change', renderAll);
   });
+  document.getElementById('btnPhaseSort').addEventListener('click', rotatePhaseSort);
 
   // 弹窗关闭
   document.getElementById('modalClose').addEventListener('click', closeDetail);
@@ -318,6 +320,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (currentDetailIdx >= 0) openEdit(currentDetailIdx);
   });
   document.getElementById('btnExport').addEventListener('click', exportData);
+  var weeklyReportBtn = document.getElementById('btnWeeklyReport');
+  if (weeklyReportBtn) {
+    weeklyReportBtn.addEventListener('click', function() {
+      window.open('weekly-report.html', '_blank', 'noopener');
+    });
+  }
   document.getElementById('btnLogout').addEventListener('click', () => {
     sessionStorage.removeItem('pmo_auth');
     window.location.replace('login.html');
@@ -603,7 +611,31 @@ function getSortedFilteredProjects() {
     });
   }
 
+  if (phasePinnedValue) {
+    filtered = filtered.slice().sort(function(a, b) {
+      return (b.phase === phasePinnedValue) - (a.phase === phasePinnedValue);
+    });
+  }
+
   return filtered;
+}
+
+function rotatePhaseSort() {
+  var phases = [...new Set(projects.map(function(p) { return p.phase; }).filter(Boolean))];
+  if (!phases.length) return;
+  var currentIdx = phases.indexOf(phasePinnedValue);
+  phasePinnedValue = phases[(currentIdx + 1) % phases.length];
+  updatePhaseSortButton();
+  renderList();
+  if (currentView === 'card') renderCards();
+}
+
+function updatePhaseSortButton() {
+  var btn = document.getElementById('btnPhaseSort');
+  if (!btn) return;
+  btn.title = phasePinnedValue ? '当前置顶：' + phasePinnedValue + '；点击切换下一个阶段' : '轮换置顶项目阶段';
+  btn.setAttribute('aria-label', btn.title);
+  btn.classList.toggle('active', !!phasePinnedValue);
 }
 
 // ===== 渲染全部 =====
@@ -1038,6 +1070,7 @@ function openEdit(idx) {
         <select id="editPhase">
           <option value="售前" ${p.phase==='售前'?'selected':''}>售前</option>
           <option value="实施开发中" ${p.phase==='实施开发中'?'selected':''}>实施开发中</option>
+          <option value="交付部署中" ${p.phase==='交付部署中'?'selected':''}>交付部署中</option>
           <option value="系统测试中" ${p.phase==='系统测试中'?'selected':''}>系统测试中</option>
           <option value="已结项" ${p.phase==='已结项'?'selected':''}>已结项</option>
         </select>
@@ -1267,7 +1300,7 @@ function debounce(fn, delay) {
 }
 
 function phaseBadge(phase) {
-  const map = { '售前': 'presale', '实施开发中': 'dev', '系统测试中': 'test', '已结项': 'done' };
+  const map = { '售前': 'presale', '实施开发中': 'dev', '交付部署中': 'deploy', '系统测试中': 'test', '已结项': 'done' };
   const cls = map[phase] || 'default';
   return `<span class="badge badge-phase-${cls}">${esc(phase) || '未知'}</span>`;
 }
@@ -1362,6 +1395,7 @@ function openNewProject() {
         <select id="newPhase">
           <option value="售前">售前</option>
           <option value="实施开发中" selected>实施开发中</option>
+          <option value="交付部署中">交付部署中</option>
           <option value="系统测试中">系统测试中</option>
           <option value="已结项">已结项</option>
         </select>
