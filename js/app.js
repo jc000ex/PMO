@@ -13,7 +13,7 @@ const SYNC_PENDING_KEY = 'pmo_sync_pending';
 const SYNC_ERROR_KEY = 'pmo_sync_error';
 
 // ===== GitHub API 直接持久化 =====
-var APP_VERSION = '20261020-sync2';
+var APP_VERSION = '20261020-sync3';
 var ONLINE_DATA_URL = 'https://jc000ex.github.io/PMO/data/projects.json';
 var GITHUB_API_URL = 'https://api.github.com/repos/jc000ex/PMO/contents/data/projects.json';
 var _syncTimer = null;
@@ -194,7 +194,16 @@ function getPersistableProjects() {
 }
 
 function getServerApi() {
-  try { return (localStorage.getItem('pmo_sync_api') || '').trim(); } catch (_) { return ''; }
+  var saved = '';
+  try { saved = (localStorage.getItem('pmo_sync_api') || '').trim(); } catch (_) {}
+  if (saved) return saved;
+
+  // 部署到 Vercel 这类带服务端的域名时，默认走同域接口，无需手动配置
+  var h = location.hostname;
+  if (location.protocol.indexOf('http') === 0 && h && !h.endsWith('.github.io')) {
+    return '/api/save';
+  }
+  return '';
 }
 
 async function saveViaServer(cleanProjects, apiUrl) {
