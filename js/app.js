@@ -13,7 +13,7 @@ const SYNC_PENDING_KEY = 'pmo_sync_pending';
 const SYNC_ERROR_KEY = 'pmo_sync_error';
 
 // ===== GitHub API 直接持久化 =====
-var APP_VERSION = '20261020-sync3';
+var APP_VERSION = '20261020-sync4';
 var ONLINE_DATA_URL = 'https://jc000ex.github.io/PMO/data/projects.json';
 var GITHUB_API_URL = 'https://api.github.com/repos/jc000ex/PMO/contents/data/projects.json';
 var _syncTimer = null;
@@ -90,6 +90,7 @@ function clearSyncPending() {
 
 function getSyncErrorMessage(err) {
   var msg = err && err.message ? err.message : String(err || '未知错误');
+  if (/GITHUB_TOKEN missing|Server not configured/i.test(msg)) return '服务器上没有配置同步密钥 GITHUB_TOKEN';
   if (/401|Bad credentials/i.test(msg)) return 'GitHub Token 无效或已过期';
   if (/403/i.test(msg)) return 'GitHub Token 权限不足或访问受限';
   if (/409|conflict/i.test(msg)) return '线上数据刚被更新，自动重试仍失败';
@@ -402,13 +403,14 @@ async function doSync() {
     }
   }
 
-  // 两个通道都没有：明确提示，不再静默
+  // 两个通道都没有成功：把具体原因直接显示出来，避免误判
+  var detail = errors.length ? '（' + errors.join('；') + '）' : '（' + reason + '）';
   var reason = isStaticSaveHost()
     ? '线上网页没有配置同步密钥'
     : '无法连接保存服务';
-  markSyncPending(reason);
-  showSyncBanner('⚠ 当前保存只在浏览器生效，<b>换设备、清缓存后就会看不到</b>。点此配置同步通道。', 'warn');
-  showToast('⚠ 已保存到当前浏览器，未同步线上');
+  markSyncPending(errors[0] || reason);
+  showSyncBanner('⚠ 没能同步到线上' + detail + '。数据已暂存在本浏览器，<b>换设备或清缓存会丢失</b>。点此处理。', 'error');
+  showToast('⚠ 未同步到线上，已暂存本浏览器');
   _syncInFlight = false;
 }
 
