@@ -5,3 +5,8 @@ oa_cookie.txt
 login_form_js.txt
 login_js.txt
 js/config.js
+
+# 本地数据备份与排查存档（不入库）
+备份/
+恢复存档/
+.workbuddy/

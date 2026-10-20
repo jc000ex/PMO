@@ -899,3 +899,20 @@ body {
   .detail-col-right { border-left: none; border-top: 1px solid var(--border-light); padding: 16px 0 0 0; }
   .detail-col-left { padding: 0 0 0 0; }
 }
+
+/* ===== 同步状态告警条 ===== */
+.sync-banner {
+  display: flex; align-items: center; justify-content: space-between; gap: 14px;
+  padding: 11px 22px; font-size: 14px; line-height: 1.6;
+  border-bottom: 1px solid transparent;
+}
+.sync-banner[hidden] { display: none; }
+.sync-banner.warn { background: #fff8e6; color: #7a5200; border-bottom-color: #f0dca8; }
+.sync-banner.error { background: #fdecea; color: #8c1d18; border-bottom-color: #f3c4bf; }
+.sync-banner b { font-weight: 700; }
+.sync-banner button {
+  flex: none; background: transparent; border: 1px solid currentColor; color: inherit;
+  border-radius: 6px; padding: 4px 13px; font-size: 13px; cursor: pointer;
+  font-family: inherit; white-space: nowrap;
+}
+.sync-banner button:hover { background: rgba(0, 0, 0, .06); }

@@ -4,9 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>国科项目管理仪表板</title>
-<link rel="stylesheet" href="css/style.css?v=20261012-publish1">
+<link rel="stylesheet" href="css/style.css?v=20261020-sync">
 </head>
 <body>
+
+<div id="syncBanner" class="sync-banner warn" hidden></div>
 
 <!-- 顶部导航 -->
 <header class="header">
@@ -161,17 +163,20 @@
 
 <script>
 if (sessionStorage.getItem('pmo_auth') !== '1') { window.location.replace('login.html'); }
-</script><script src="js/config.js"></script><script src="js/app.js?v=20261012-publish1"></script>
+</script><script src="js/config.js"></script><script src="js/app.js?v=20261020-sync"></script>
 
 <!-- Token 设置弹窗 -->
 <div class="modal-overlay" id="modalToken">
   <div class="modal" style="max-width:460px">
     <div class="modal-header">
-      <h2>设置 GitHub Token</h2>
+      <h2>设置同步通道</h2>
       <button class="modal-close" id="tokenClose">&times;</button>
     </div>
     <div class="modal-body">
-      <p style="font-size:13px;color:var(--text-500);margin-bottom:12px">GitHub Pages 线上手动保存需要 GitHub Personal Access Token 才能同步到仓库；未配置时数据只会暂存在当前浏览器。Token 仅存储在你的浏览器中。</p>
+      <p style="font-size:13px;color:var(--text-500);margin-bottom:12px">两种方式二选一即可。<b>同步服务地址</b>填了之后，这台设备不需要再配密钥；只填 <b>GitHub Token</b> 也能用，但换设备要重新填。两者都不填时，保存只存在当前浏览器，换设备会看不到。</p>
+      <label style="display:block;font-size:12px;color:var(--text-500);margin-bottom:4px">同步服务地址（可选）</label>
+      <input type="text" id="syncApiInput" placeholder="https://你的服务.vercel.app/api/save" autocomplete="off" spellcheck="false" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:var(--bg);color:var(--text-700);margin-bottom:12px">
+      <label style="display:block;font-size:12px;color:var(--text-500);margin-bottom:4px">GitHub Token（可选）</label>
       <input type="password" id="tokenInput" name="pmo-github-access-token" placeholder="ghp_..." autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true" data-form-type="other" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;font-size:14px;background:var(--bg);color:var(--text-700)">
       <div style="margin-top:12px;display:flex;gap:8px;justify-content:flex-end">
         <button class="btn-cancel" id="btnTokenCancel">取消</button>
