@@ -13,7 +13,7 @@ const SYNC_PENDING_KEY = 'pmo_sync_pending';
 const SYNC_ERROR_KEY = 'pmo_sync_error';
 
 // ===== GitHub API 直接持久化 =====
-var APP_VERSION = '20261020-sync';
+var APP_VERSION = '20261020-sync2';
 var ONLINE_DATA_URL = 'https://jc000ex.github.io/PMO/data/projects.json';
 var GITHUB_API_URL = 'https://api.github.com/repos/jc000ex/PMO/contents/data/projects.json';
 var _syncTimer = null;
@@ -1032,6 +1032,16 @@ function addUpdate(idx) {
   var dateInput = document.getElementById('inputUpdateDate');
   var content = input.value.trim();
   if (!content) return;
+
+  // 未配置同步通道时先拦截确认：避免以为已提交，实际只留在本机
+  if (!getServerApi() && !getToken()) {
+    var go = confirm('这台设备还没配置同步通道。\n\n这条周报只会存在本机浏览器里，换设备、清缓存或换无痕窗口就会丢失，别人也看不到。\n\n点「确定」仅保存在本机；点「取消」先去配置同步通道。');
+    if (!go) {
+      var settingsBtn = document.getElementById('btnSettings');
+      if (settingsBtn) settingsBtn.click();
+      return;
+    }
+  }
 
   var p = projects[idx];
   var edits = getLocalEdits();
